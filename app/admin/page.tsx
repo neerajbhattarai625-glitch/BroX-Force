@@ -1,0 +1,874 @@
+"use client";
+
+import { useState, useMemo, useRef, useEffect } from "react";
+import { useShop, Product, Order, OrderStatus, PaymentStatus, Customer, Voucher } from "@/lib/context/ShopContext";
+import AdminLogin from "@/components/AdminLogin";
+import {
+    LayoutDashboard, Package, ShoppingCart, Users, Ticket,
+    Palette, FolderOpen, Settings, LogOut, Plus, Search,
+    Filter, MoreHorizontal, TrendingUp, DollarSign,
+    Clock, CheckCircle2, XCircle, Truck, Trash2,
+    ChevronRight, Edit3, Image as ImageIcon, Save,
+    Eye, EyeOff, ShieldCheck, Mail, MapPin, Phone,
+    CreditCard, Globe, PieChart,
+    Calendar, Info, AlertTriangle, Check, Paintbrush, Tag, Layers
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+type AdminTab = "dashboard" | "products" | "orders" | "customers" | "coupons" | "categories" | "content" | "media" | "settings";
+
+const inputCls = "w-full bg-[var(--bg)] border border-[var(--border-subtle)] p-3 text-[var(--fg)] text-sm focus:outline-none focus:border-[var(--gold)] transition-colors placeholder-[var(--muted)]";
+const labelCls = "text-[10px] uppercase font-bold tracking-widest text-[var(--muted)] mb-1.5 block";
+const btnCls = "bg-[var(--gold)] text-black px-6 py-3 font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all duration-300 active:scale-95 disabled:opacity-50";
+
+export default function AdminPanel() {
+    const {
+        products, addProduct, updateProduct, deleteProduct,
+        orders, updateOrderStatus, updatePaymentStatus, deleteOrder,
+        customers, updateCustomer,
+        vouchers, addVoucher, toggleVoucherStatus, deleteVoucher,
+        theme, setThemeImage, resetTheme,
+        categories, addCategory, updateCategory, deleteCategory,
+        analytics,
+        adminConfig, updateAdminConfig
+    } = useShop();
+
+    const [authed, setAuthed] = useState(false);
+    const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+    const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+    const flash = (msg: string) => {
+        setSuccessMsg(msg);
+        setTimeout(() => setSuccessMsg(null), 3000);
+    };
+
+    // --- DASHBOARD METRICS ---
+    const metrics = useMemo(() => {
+        const pendingOrders = orders.filter(o => o.status === "Pending").length;
+        return {
+            revenueNPR: analytics.revenueNPR.toFixed(2),
+            revenueUSD: analytics.revenueUSD.toFixed(2),
+            totalOrders: orders.length,
+            pendingOrders,
+            totalCustomers: customers.length,
+            totalProducts: products.length,
+            stockAlerts: products.filter(p => p.stock < 10).length,
+            uniqueVisitors: analytics.uniqueVisitors,
+            totalPageHits: analytics.totalPageHits
+        };
+    }, [orders, customers, products, analytics]);
+
+    // --- PRODUCT FORM ---
+    const [showProductModal, setShowProductModal] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [productForm, setProductForm] = useState<Omit<Product, "id">>({
+        title: "", price: "0.00", description: "", category: "T-Shirts", imageUrl: "",
+        sizes: ["S", "M", "L", "XL"], colors: ["Black", "White"], stock: 100,
+        status: "In Stock", isFeatured: false, discountPrice: ""
+    });
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: "imageUrl") => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProductForm(prev => ({ ...prev, [field]: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleProductSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (editingProduct) {
+            updateProduct(editingProduct.id, productForm);
+            flash("Product updated successfully!");
+        } else {
+            addProduct(productForm);
+            flash("Product published successfully!");
+        }
+        setShowProductModal(false);
+        setEditingProduct(null);
+    };
+
+    // --- SECURITY: PASSWORD CHANGE ---
+    const [pwForm, setPwForm] = useState({ new: "", confirm: "" });
+    const handlePasswordChange = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (pwForm.new !== pwForm.confirm) return alert("Passwords do not match");
+        updateAdminConfig({ passwordHash: pwForm.new });
+        setPwForm({ new: "", confirm: "" });
+        flash("Password changed successfully!");
+    };
+
+    // --- CMS CONTENT ---
+    const [cmsForm, setCmsForm] = useState({
+        hero: theme.hero,
+        footer: theme.footer,
+        logo: theme.logo || ""
+    });
+
+    useEffect(() => {
+        setCmsForm({
+            hero: theme.hero,
+            footer: theme.footer,
+            logo: theme.logo || ""
+        });
+    }, [theme]);
+
+    const handleCmsSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setThemeImage('hero', cmsForm.hero);
+        setThemeImage('footer', cmsForm.footer);
+        setThemeImage('logo', cmsForm.logo);
+        flash("Visuals updated successfully!");
+    };
+
+    if (!authed) return <AdminLogin onSuccess={() => setAuthed(true)} />;
+
+    const logout = () => {
+        sessionStorage.removeItem("brox_admin_auth");
+        setAuthed(false);
+    };
+
+    const menuItems: { id: AdminTab; label: string; icon: any }[] = [
+        { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+        { id: "products", label: "Inventory", icon: Package },
+        { id: "categories", label: "Categories", icon: Layers },
+        { id: "orders", label: "Orders", icon: ShoppingCart },
+        { id: "customers", label: "Customers", icon: Users },
+        { id: "coupons", label: "Vouchers", icon: Ticket },
+        { id: "content", label: "Content", icon: FolderOpen },
+        { id: "media", label: "Media", icon: Eye },
+        { id: "settings", label: "Settings", icon: Settings },
+    ];
+
+    return (
+        <div className="min-h-screen bg-[var(--bg)] flex">
+            {/* Sidebar */}
+            <aside className="w-64 border-r border-[var(--border-subtle)] bg-[var(--bg2)] hidden lg:flex flex-col fixed inset-y-0 z-40">
+                <div className="p-8 border-b border-[var(--border-subtle)]">
+                    <span className="font-heading text-2xl tracking-[0.2em] text-[var(--fg)]">
+                        BroX<span className="text-[var(--gold)]"> Force</span>
+                    </span>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-[var(--muted)] mt-1">Admin Panel</p>
+                </div>
+
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                    {menuItems.map(item => (
+                        <button
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-all duration-200 group ${activeTab === item.id
+                                ? "bg-[var(--gold-dim)] text-[var(--gold)] border-r-2 border-[var(--gold)]"
+                                : "text-[var(--muted)] hover:text-[var(--fg)] hover:bg-[var(--bg3)]"
+                                }`}
+                        >
+                            <item.icon className={`w-4 h-4 transition-transform group-hover:scale-110`} />
+                            {item.label}
+                        </button>
+                    ))}
+                </nav>
+
+                <div className="p-4 border-t border-[var(--border-subtle)]">
+                    <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-red-400/80 hover:text-red-400 hover:bg-red-500/5 transition-all">
+                        <LogOut className="w-4 h-4" /> Sign Out
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 lg:ml-64 p-6 lg:p-10 bg-[var(--bg)] min-h-screen">
+
+                {/* Mobile Header (Simplified) */}
+                <div className="lg:hidden flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-subtle)] overflow-x-auto gap-4 no-scrollbar">
+                    {menuItems.map(item => (
+                        <button key={item.id} onClick={() => setActiveTab(item.id)} className={`shrink-0 p-3 flex flex-col items-center gap-1 ${activeTab === item.id ? "text-[var(--gold)]" : "text-[var(--muted)]"}`}>
+                            <item.icon className="w-5 h-5" />
+                            <span className="text-[8px] uppercase font-bold tracking-tighter">{item.label}</span>
+                        </button>
+                    ))}
+                    <button onClick={logout} className="shrink-0 p-3 text-red-500 flex flex-col items-center gap-1">
+                        <LogOut className="w-5 h-5" />
+                        <span className="text-[8px] uppercase font-bold">Exit</span>
+                    </button>
+                </div>
+
+                {/* Global Toast */}
+                <AnimatePresence>
+                    {successMsg && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20, x: "-50%" }}
+                            animate={{ opacity: 1, y: 0, x: "-50%" }}
+                            exit={{ opacity: 0, y: -20, x: "-50%" }}
+                            className="fixed top-8 left-1/2 z-[100] bg-[var(--gold)] text-black px-8 py-3 font-bold uppercase text-xs tracking-widest shadow-2xl flex items-center gap-2"
+                        >
+                            <CheckCircle2 className="w-4 h-4" /> {successMsg}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <div className="max-w-7xl mx-auto">
+                    {/* Dashboard Header */}
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                        <div>
+                            <p className="text-[10px] uppercase tracking-[0.4em] text-[var(--gold)] font-bold mb-3">Enterprise Suite</p>
+                            <h1 className="font-heading text-5xl md:text-6xl text-[var(--fg)] capitalize tracking-tight">{activeTab}</h1>
+                        </div>
+
+                        <div className="flex items-center gap-6 bg-[var(--bg2)] border border-[var(--border-subtle)] px-6 py-3">
+                            <div className="flex flex-col items-center">
+                                <span className="text-[9px] uppercase tracking-widest text-[var(--muted)]">Unique Visitors</span>
+                                <span className="font-mono text-[var(--gold)] font-bold text-lg flex items-center gap-1">
+                                    {analytics.uniqueVisitors}
+                                </span>
+                            </div>
+                            <div className="w-px h-8 bg-[var(--border-subtle)]" />
+                            <div className="flex flex-col items-center">
+                                <span className="text-[9px] uppercase tracking-widest text-[var(--muted)]">Total Page Hits</span>
+                                <span className="font-mono text-[var(--gold)] font-bold text-lg">
+                                    {analytics.totalPageHits}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                        {/* 1. DASHBOARD */}
+                        {activeTab === "dashboard" && (
+                            <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
+                                {/* Stats Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {[
+                                        { label: "Revenue (NPR)", val: `Rs.${metrics.revenueNPR}`, icon: DollarSign, color: "text-[var(--gold)]" },
+                                        { label: "Revenue (USD)", val: `$${metrics.revenueUSD}`, icon: TrendingUp, color: "text-green-400" },
+                                        { label: "Total Orders", val: metrics.totalOrders, icon: ShoppingCart, color: "text-blue-400" },
+                                        { label: "Total Products", val: metrics.totalProducts, icon: Package, color: "text-purple-400" },
+                                    ].map((s, i) => (
+                                        <div key={i} className="bg-[var(--card)] border border-[var(--border-subtle)] p-6 group hover:border-[var(--gold)] transition-all duration-500">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className={`p-3 bg-[var(--bg3)] border border-[var(--border-subtle)] ${s.color}`}>
+                                                    <s.icon className="w-5 h-5" />
+                                                </div>
+                                                <TrendingUp className="w-4 h-4 text-green-500/50" />
+                                            </div>
+                                            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)] mb-1 font-bold">{s.label}</p>
+                                            <h3 className="text-3xl font-mono text-[var(--fg)] tracking-tighter">{s.val}</h3>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    {/* Recent Activity */}
+                                    <div className="lg:col-span-2 bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h3 className="font-heading text-2xl text-[var(--fg)]">Recent Transactions</h3>
+                                            <button onClick={() => setActiveTab("orders")} className="text-[9px] uppercase tracking-[0.3em] text-[var(--gold)] font-bold hover:text-white transition-colors">View All</button>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {orders.slice(0, 5).map(order => (
+                                                <div key={order.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-[var(--bg2)] border border-[var(--border-subtle)] hover:bg-[var(--bg3)] transition-colors gap-4">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-[var(--bg3)] flex items-center justify-center font-bold text-[var(--gold)] border border-[var(--border-subtle)] text-[10px]">
+                                                            {order.customerName.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-bold text-[var(--fg)] uppercase tracking-wider">{order.customerName}</p>
+                                                            <p className="text-[9px] text-[var(--muted)] font-mono">{new Date(order.createdAt).toDateString()}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-mono text-sm text-[var(--fg)] font-bold">
+                                                            {order.paymentCurrency === "USD" ? `$${order.total}` : `Rs.${order.total}`}
+                                                        </p>
+                                                        <span className={`text-[8px] uppercase tracking-widest px-1.5 py-0.5 border border-white/10 ${order.status === "Delivered" ? "bg-green-500/10 text-green-400" : "bg-[var(--gold)]/10 text-[var(--gold)]"}`}>
+                                                            {order.status}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {orders.length === 0 && <p className="text-center py-10 text-[var(--muted)] text-sm italic">No data available</p>}
+                                        </div>
+                                    </div>
+
+                                    {/* Stock Alerts */}
+                                    <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                        <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-2">
+                                            Inventory <span className="bg-red-500/10 text-red-400 text-[10px] px-2 py-0.5 border border-red-500/20">{metrics.stockAlerts}</span>
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {products.filter(p => p.stock < 20).slice(0, 5).map(p => (
+                                                <div key={p.id} className="group">
+                                                    <div className="flex justify-between text-[11px] mb-2 font-bold uppercase tracking-wider">
+                                                        <span className="text-[var(--fg)] truncate max-w-[120px]">{p.title}</span>
+                                                        <span className={p.stock < 10 ? "text-red-400" : "text-[var(--gold)]"}>{p.stock} left</span>
+                                                    </div>
+                                                    <div className="h-1 bg-[var(--bg3)] w-full relative overflow-hidden">
+                                                        <motion.div initial={{ width: 0 }} animate={{ width: `${(p.stock / 200) * 100}%` }} className={`h-full ${p.stock < 10 ? "bg-red-500" : "bg-[var(--gold)]"}`} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {products.length === 0 && <p className="text-[var(--muted)] text-xs text-center">All clear</p>}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 2. PRODUCTS PAGE */}
+                        {activeTab === "products" && (
+                            <motion.div key="prod" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+                                <div className="flex flex-col sm:flex-row gap-4 justify-between items-start">
+                                    <div className="flex gap-2">
+                                        <button onClick={() => {
+                                            setEditingProduct(null);
+                                            setProductForm({
+                                                title: "", price: "0.00", description: "", category: "T-Shirts", imageUrl: "",
+                                                sizes: ["S", "M", "L", "XL"], colors: ["Black", "White"], stock: 100,
+                                                status: "In Stock", isFeatured: false, discountPrice: ""
+                                            });
+                                            setShowProductModal(true);
+                                        }} className={btnCls}>
+                                            <Plus className="w-4 h-4 inline-block mr-2 -mt-0.5" /> New Product
+                                        </button>
+                                    </div>
+                                    <div className="flex gap-2 w-full sm:w-auto">
+                                        <div className="relative flex-1 sm:w-64">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" />
+                                            <input type="text" placeholder="Search SKU or Name..." className={`${inputCls} pl-10 h-11`} />
+                                        </div>
+                                        <button className="bg-[var(--bg2)] border border-[var(--border-subtle)] px-4 text-[var(--muted)] hover:text-[var(--fg)] transition-colors"><Filter className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] overflow-hidden">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-[var(--bg3)] border-b border-[var(--border-subtle)]">
+                                                <th className="p-4 text-[10px] uppercase tracking-widest text-[var(--muted)] font-bold">Image</th>
+                                                <th className="p-4 text-[10px] uppercase tracking-widest text-[var(--muted)] font-bold">Product Details</th>
+                                                <th className="p-4 text-[10px] uppercase tracking-widest text-[var(--muted)] font-bold">Category</th>
+                                                <th className="p-4 text-[10px] uppercase tracking-widest text-[var(--muted)] font-bold">Price</th>
+                                                <th className="p-4 text-[10px] uppercase tracking-widest text-[var(--muted)] font-bold">Stock</th>
+                                                <th className="p-4 text-[10px] uppercase tracking-widest text-[var(--muted)] font-bold">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[var(--border-subtle)]">
+                                            {products.map(p => (
+                                                <tr key={p.id} className="hover:bg-[var(--bg2)] transition-colors group">
+                                                    <td className="p-4">
+                                                        <div className="w-12 h-16 bg-[var(--bg3)] overflow-hidden border border-[var(--border-subtle)]">
+                                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                            <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <p className="font-bold text-[var(--fg)] text-xs uppercase tracking-wider mb-1 group-hover:text-[var(--gold)] transition-colors">{p.title}</p>
+                                                        <div className="flex gap-1">
+                                                            {p.isFeatured && <span className="text-[8px] uppercase tracking-tighter px-1 px-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Featured</span>}
+                                                            <span className={`text-[8px] uppercase tracking-tighter px-1 border ${p.stock > 0 ? "border-green-500/20 text-green-400 bg-green-500/5" : "border-red-500/20 text-red-400 bg-red-500/5"}`}>
+                                                                {p.stock > 0 ? "Available" : "Sold Out"}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4 text-[11px] text-[var(--muted)] uppercase tracking-wider">{p.category}</td>
+                                                    <td className="p-4">
+                                                        <p className="font-mono text-xs text-[var(--fg)] font-bold">${p.price}</p>
+                                                        {p.discountPrice && <p className="font-mono text-[9px] text-[var(--muted)] line-through">${p.discountPrice}</p>}
+                                                    </td>
+                                                    <td className={`p-4 font-mono text-xs font-bold ${p.stock < 15 ? "text-red-400" : "text-[var(--fg)]"}`}>{p.stock}</td>
+                                                    <td className="p-4">
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => {
+                                                                setEditingProduct(p);
+                                                                setProductForm({
+                                                                    ...p,
+                                                                    sizes: p.sizes || [],
+                                                                    colors: p.colors || [],
+                                                                    discountPrice: p.discountPrice || ""
+                                                                });
+                                                                setShowProductModal(true);
+                                                            }} className="p-2 bg-[var(--bg3)] text-[var(--muted)] hover:text-[var(--fg)] border border-[var(--border-subtle)] transition-colors">
+                                                                <Edit3 className="w-4 h-4" />
+                                                            </button>
+                                                            <button onClick={() => { if (confirm("Delete product?")) deleteProduct(p.id); }} className="p-2 bg-[var(--bg3)] text-red-400/60 hover:text-red-400 border border-[var(--border-subtle)] transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {products.length === 0 && <div className="p-20 text-center text-[var(--muted)] uppercase tracking-widest text-xs">No products found</div>}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 3. ORDERS PAGE */}
+                        {activeTab === "orders" && (
+                            <motion.div key="ord" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] divide-y divide-[var(--border-subtle)]">
+                                    {orders.map(o => (
+                                        <div key={o.id} className="p-6 md:p-8 flex flex-col lg:flex-row gap-10">
+                                            <div className="flex-1 space-y-6">
+                                                <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
+                                                    <div>
+                                                        <p className="text-[10px] uppercase tracking-widest text-[var(--gold)] font-bold mb-1">Order Ref: {o.id.split('_')[1]}</p>
+                                                        <div className="flex items-center gap-3">
+                                                            <h3 className="font-heading text-3xl text-[var(--fg)]">{o.customerName}</h3>
+                                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 border ${o.status === "Delivered" ? "border-green-500/30 text-green-400 bg-green-500/5" :
+                                                                o.status === "Cancelled" ? "border-red-500/30 text-red-500 bg-red-500/5" :
+                                                                    "border-[var(--gold)]/30 text-[var(--gold)] bg-[var(--gold)]/5"
+                                                                }`}>{o.status}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-xs text-[var(--muted)] font-mono">{new Date(o.createdAt).toLocaleString()}</p>
+                                                        <p className="text-xl font-mono text-[var(--fg)] font-bold mt-1">${o.total}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                                                    <div className="space-y-4">
+                                                        <h4 className="text-[9px] uppercase tracking-widest text-[var(--muted)] font-bold border-b border-white/5 pb-2">Shipping Info</h4>
+                                                        <div className="space-y-3 text-[11px] text-[var(--muted)] leading-relaxed font-medium">
+                                                            <p className="flex items-center gap-3"><Phone className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerPhone}</p>
+                                                            <p className="flex items-center gap-3"><Mail className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerEmail}</p>
+                                                            <p className="flex items-center gap-3"><MapPin className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerLocation}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <h4 className="text-[9px] uppercase tracking-widest text-[var(--muted)] font-bold border-b border-white/5 pb-2">Workflow Controls</h4>
+                                                        <div className="space-y-4">
+                                                            {o.status === "Pending" ? (
+                                                                <motion.button
+                                                                    whileHover={{ scale: 1.02 }}
+                                                                    whileTap={{ scale: 0.98 }}
+                                                                    onClick={() => updateOrderStatus(o.id, "Shipped")}
+                                                                    className="w-full flex items-center justify-center gap-3 bg-[var(--gold)] text-black py-3.5 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-colors border border-[var(--gold)] shadow-xl shadow-[var(--gold)]/10"
+                                                                >
+                                                                    <Truck className="w-4 h-4" /> Confirm & Ship
+                                                                </motion.button>
+                                                            ) : (
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {(["Pending", "Shipped", "Delivered", "Cancelled"] as OrderStatus[]).map(s => (
+                                                                        <motion.button
+                                                                            key={s}
+                                                                            initial={false}
+                                                                            animate={{
+                                                                                backgroundColor: o.status === s ? (s === "Delivered" ? "#22c55e" : "#c9a84c") : "transparent",
+                                                                                color: o.status === s ? "#000000" : "var(--muted)",
+                                                                                borderColor: o.status === s ? (s === "Delivered" ? "#22c55e" : "#c9a84c") : "var(--border-subtle)"
+                                                                            }}
+                                                                            onClick={() => updateOrderStatus(o.id, s)}
+                                                                            className="px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold border transition-all"
+                                                                        >
+                                                                            {s}
+                                                                        </motion.button>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                            <div className="flex gap-4 items-end">
+                                                                <div className="flex-1">
+                                                                    <p className="text-[8px] uppercase tracking-widest text-[var(--muted)] mb-1.5 font-bold">Payment Status</p>
+                                                                    <select value={o.paymentStatus} onChange={(e) => updatePaymentStatus(o.id, e.target.value as PaymentStatus)} className="w-full bg-[var(--bg3)] border border-[var(--border-subtle)] p-2.5 text-[10px] uppercase font-bold text-[var(--fg)] outline-none focus:border-[var(--gold)] transition-colors">
+                                                                        {(["Unpaid", "Paid", "Refunded"] as PaymentStatus[]).map(s => <option key={s}>{s}</option>)}
+                                                                    </select>
+                                                                </div>
+                                                                <button onClick={() => { if (confirm("Delete order?")) deleteOrder(o.id); }} className="p-2.5 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all"><Trash2 className="w-4 h-4" /></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-[var(--bg3)] border border-[var(--border-subtle)] p-5">
+                                                    <div className="flex justify-between items-center mb-3">
+                                                        <h4 className="text-[9px] uppercase tracking-widest text-[var(--muted)] font-bold">Order Basket</h4>
+                                                        {o.appliedVoucher && (
+                                                            <div className="flex items-center gap-2 bg-[var(--gold)]/10 px-2 py-0.5 border border-[var(--gold)]/30">
+                                                                <Tag className="w-3 h-3 text-[var(--gold)]" />
+                                                                <span className="text-[9px] font-black uppercase tracking-widest text-[var(--gold)]">Voucher: {o.appliedVoucher}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        {o.items.map((item, idx) => (
+                                                            <div key={idx} className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider pb-2 border-b border-white/5 last:border-0 last:pb-0">
+                                                                <div>
+                                                                    <span className="text-[var(--fg)]">{item.title}</span>
+                                                                    <span className="text-[var(--gold)] ml-2">x{item.quantity}</span>
+                                                                    {item.customSize ? (
+                                                                        <span className="text-[var(--gold)] ml-2 border border-[var(--gold)]/30 px-1.5 py-0.5 rounded-sm">Personal: {item.customSize}</span>
+                                                                    ) : (
+                                                                        item.size && <span className="text-[var(--muted)] ml-2">[{item.size}]</span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-mono text-[var(--muted)]">${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {orders.length === 0 && <div className="p-20 text-center text-[var(--muted)] italic text-sm">No orders yet</div>}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 4. CUSTOMERS */}
+                        {activeTab === "customers" && (
+                            <motion.div key="cust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="bg-[var(--bg3)] border-b border-[var(--border-subtle)]">
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Profile</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Contact</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Total Orders</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Revenue</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[var(--border-subtle)]">
+                                            {customers.map(c => (
+                                                <tr key={c.id} className="hover:bg-[var(--bg2)] transition-all">
+                                                    <td className="p-5 flex items-center gap-4">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${c.isBlocked ? "bg-red-500/20 text-red-500" : "bg-[var(--gold-dim)] text-[var(--gold)]"}`}>
+                                                            {c.name.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-[var(--fg)] text-xs uppercase tracking-wider">{c.name}</p>
+                                                            <span className={`text-[8px] uppercase font-bold ${c.isBlocked ? "text-red-400" : "text-green-400"}`}>{c.isBlocked ? "Blocked" : "Active Member"}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-5">
+                                                        <p className="text-xs text-[var(--muted)] font-medium mb-1">{c.email}</p>
+                                                        <p className="text-xs text-[var(--muted)] font-medium">{c.phone}</p>
+                                                    </td>
+                                                    <td className="p-5 text-xs font-mono text-[var(--fg)]">{c.orderHistory.length}</td>
+                                                    <td className="p-5 text-sm font-mono text-[var(--gold)] font-bold">${c.totalSpent.toFixed(2)}</td>
+                                                    <td className="p-5">
+                                                        {c.isBlocked
+                                                            ? <button onClick={() => updateCustomer(c.id, { isBlocked: false })} className="text-[10px] uppercase font-bold tracking-widest text-green-400 hover:text-green-300">Unblock</button>
+                                                            : <button onClick={() => updateCustomer(c.id, { isBlocked: true })} className="text-[10px] uppercase font-bold tracking-widest text-red-400/60 hover:text-red-400">Block</button>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 5. COUPONS */}
+                        {activeTab === "coupons" && (
+                            <motion.div key="coup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                                <div className="lg:col-span-4 bg-[var(--card)] border border-[var(--border-subtle)] p-8 h-fit">
+                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Create Coupon</h3>
+                                    <form onSubmit={(e) => {
+                                        e.preventDefault();
+                                        const d = new FormData(e.currentTarget);
+                                        addVoucher(d.get('code') as string, Number(d.get('pct')), d.get('exp') as string, Number(d.get('limit')));
+                                        flash("Coupon created!");
+                                        (e.target as any).reset();
+                                    }} className="space-y-6">
+                                        <div><label className={labelCls}>Code</label><input name="code" type="text" className={inputCls} placeholder="WELCOMEX" required /></div>
+                                        <div><label className={labelCls}>Discount %</label><input name="pct" type="number" className={inputCls} placeholder="20" required /></div>
+                                        <div><label className={labelCls}>Expiry Date</label><input name="exp" type="date" className={inputCls} /></div>
+                                        <div><label className={labelCls}>Usage Limit</label><input name="limit" type="number" className={inputCls} placeholder="100" /></div>
+                                        <button type="submit" className={btnCls + " w-full"}>Issue Coupon</button>
+                                    </form>
+                                </div>
+                                <div className="lg:col-span-8 bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Active Vouchers</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {vouchers.map((v, i) => (
+                                            <div key={i} className="p-6 bg-[var(--bg2)] border border-[var(--border-subtle)] relative overflow-hidden group">
+                                                <div className="absolute -right-4 -top-4 w-12 h-12 bg-[var(--gold)]/10 rotate-45 border border-[var(--gold)]/20" />
+                                                <p className="font-mono text-xl font-black text-[var(--gold)] mb-1 tracking-tighter">{v.code}</p>
+                                                <p className="text-[10px] uppercase font-bold text-[var(--muted)] mb-4">{v.discountPercentage}% OFF</p>
+                                                <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-bold">
+                                                    <span className="text-[var(--muted)]">Uses: {v.usageCount} / {v.usageLimit || '∞'}</span>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={v.isActive ? "text-green-400" : "text-red-400"}>
+                                                            {v.isActive ? "Active" : "Inactive"}
+                                                        </span>
+                                                        <span className={new Date(v.expiryDate || '2099') < new Date() ? "text-red-400" : "text-[var(--muted)]"}>
+                                                            {v.expiryDate ? new Date(v.expiryDate).toLocaleDateString() : '∞'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-4 flex gap-2 border-t border-white/5 pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => toggleVoucherStatus(v.code)}
+                                                        className={`flex-1 text-[8px] uppercase font-black py-2 border transition-all ${v.isActive ? "border-red-500/30 text-red-500 hover:bg-red-500/10" : "border-green-500/30 text-green-400 hover:bg-green-500/10"}`}
+                                                    >
+                                                        {v.isActive ? "Deactivate" : "Activate"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { if (confirm(`Delete ${v.code}?`)) deleteVoucher(v.code); }}
+                                                        className="px-3 py-2 border border-white/10 text-gray-400 hover:border-red-500 hover:text-red-500 transition-all"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 6. CATEGORIES */}
+                        {activeTab === "categories" && (
+                            <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl space-y-8">
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Category Management</h3>
+
+                                    <div className="flex gap-4 mb-10">
+                                        <input
+                                            id="new-category-input"
+                                            type="text"
+                                            placeholder="Enter category name..."
+                                            className={inputCls + " flex-1"}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    const val = (e.target as HTMLInputElement).value;
+                                                    if (val) {
+                                                        addCategory(val);
+                                                        (e.target as HTMLInputElement).value = "";
+                                                        flash(`Category "${val}" added!`);
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                const el = document.getElementById('new-category-input') as HTMLInputElement;
+                                                if (el.value) {
+                                                    addCategory(el.value);
+                                                    el.value = "";
+                                                    flash("Category added!");
+                                                }
+                                            }}
+                                            className={btnCls}
+                                        >
+                                            Add Category
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {categories.map(cat => (
+                                            <div key={cat} className="group flex items-center justify-between p-4 bg-[var(--bg3)] border border-[var(--border-subtle)] hover:border-[var(--gold)] transition-all">
+                                                <span className="text-sm font-bold uppercase tracking-widest text-[var(--fg)]">{cat}</span>
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => {
+                                                            const n = prompt("Rename category:", cat);
+                                                            if (n && n !== cat) updateCategory(cat, n);
+                                                        }}
+                                                        className="p-2 text-gray-400 hover:text-[var(--gold)]"
+                                                    >
+                                                        <Edit3 className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm(`Delete category "${cat}"? Products in this category will not be deleted but may need re-categorizing.`)) {
+                                                                deleteCategory(cat);
+                                                                flash("Category deleted");
+                                                            }
+                                                        }}
+                                                        className="p-2 text-gray-400 hover:text-red-500"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 7. CONTENT */}
+                        {activeTab === "content" && (
+                            <motion.div key="cont" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl space-y-8">
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Site Assets & CMS</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        {/* Brand Story */}
+                                        <form onSubmit={handleCmsSubmit} className="space-y-6">
+                                            <div><label className={labelCls}>Homepage Hero Image</label><input type="url" value={cmsForm.hero} onChange={e => setCmsForm(prev => ({ ...prev, hero: e.target.value }))} className={inputCls} placeholder="https://..." /></div>
+                                            <div><label className={labelCls}>Footer Background</label><input type="url" value={cmsForm.footer} onChange={e => setCmsForm(prev => ({ ...prev, footer: e.target.value }))} className={inputCls} placeholder="https://..." /></div>
+                                            <div><label className={labelCls}>Custom Logo URL</label><input type="url" value={cmsForm.logo} onChange={e => setCmsForm(prev => ({ ...prev, logo: e.target.value }))} className={inputCls} placeholder="https://..." /></div>
+                                            <button type="submit" className={btnCls + " w-full"}>Update Assets</button>
+                                        </form>
+                                        <div className="bg-[var(--bg3)] p-6 border border-[var(--border-subtle)] flex flex-col items-center justify-center text-center">
+                                            <Paintbrush className="w-12 h-12 text-[var(--gold)] mb-4 opacity-50" />
+                                            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--fg)] mb-2">UI Styling Mode</h4>
+                                            <p className="text-[10px] text-[var(--muted)] leading-relaxed mb-6 uppercase tracking-widest">Animations are globally synchronised. Adding products or editing content does not disrupt the luxury entrance effects.</p>
+                                            <button onClick={resetTheme} className="text-[10px] font-bold uppercase tracking-widest border border-[var(--border)] px-6 py-2 hover:bg-white hover:text-black transition-all">Revert to Defaults</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 7. MEDIA MANAGER */}
+                        {activeTab === "media" && (
+                            <motion.div key="med" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                    <div className="flex justify-between items-center mb-10">
+                                        <h3 className="font-heading text-2xl text-[var(--fg)]">Digital Assets Library</h3>
+                                        <label className={`${btnCls} cursor-pointer inline-flex items-center gap-2`}>
+                                            <Plus className="w-4 h-4" /> Upload Mockups
+                                            <input type="file" className="hidden" accept="image/*" multiple />
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                                        {products.map(p => (
+                                            <div key={p.id} className="aspect-square bg-[var(--bg2)] border border-[var(--border-subtle)] relative group overflow-hidden">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={p.imageUrl} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <button className="p-2 bg-[var(--gold)] text-black rounded-full"><Eye className="w-4 h-4" /></button>
+                                                </div>
+                                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2 text-[8px] uppercase font-bold text-white tracking-widest truncate">{p.title}</div>
+                                            </div>
+                                        ))}
+                                        <div className="aspect-square bg-[var(--bg3)] border-2 border-dashed border-[var(--border-subtle)] flex items-center justify-center">
+                                            <ImageIcon className="w-8 h-8 text-[var(--muted)] opacity-20" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* 8. SETTINGS */}
+                        {activeTab === "settings" && (
+                            <motion.div key="sett" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-3"><ShieldCheck className="w-6 h-6 text-[var(--gold)]" /> Security & Account</h3>
+                                    <form onSubmit={handlePasswordChange} className="space-y-6">
+                                        <div><label className={labelCls}>Global Admin Password</label><input type="password" value={pwForm.new} onChange={e => setPwForm(p => ({ ...p, new: e.target.value }))} className={inputCls} placeholder="Enter new password" required /></div>
+                                        <div><label className={labelCls}>Confirm Password</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))} className={inputCls} placeholder="Verify password" required /></div>
+                                        <p className="text-[9px] text-[var(--muted)] uppercase tracking-widest leading-relaxed">Updating this will instantly invalidate current session. Only the new password will function across all access points.</p>
+                                        <button type="submit" className={btnCls + " w-full"}>Update Credentials</button>
+                                    </form>
+                                </div>
+
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-3"><CreditCard className="w-6 h-6 text-[var(--gold)]" /> Payment Gateways</h3>
+                                    <div className="space-y-4">
+                                        {[
+                                            { id: "esewa", label: "eSewa Payment", active: adminConfig.payments.esewa },
+                                            { id: "khalti", label: "Khalti SDK", active: adminConfig.payments.khalti },
+                                            { id: "stripe", label: "Stripe Checkout", active: adminConfig.payments.stripe },
+                                            { id: "paypal", label: "PayPal Express", active: adminConfig.payments.paypal },
+                                            { id: "cod", label: "Cash on Delivery", active: adminConfig.payments.cod }
+                                        ].map(pm => (
+                                            <div key={pm.id} className="flex items-center justify-between p-4 bg-[var(--bg3)] border border-[var(--border-subtle)]">
+                                                <span className="text-xs uppercase font-bold tracking-widest text-[var(--fg)]">{pm.label}</span>
+                                                <button onClick={() => updateAdminConfig({ payments: { ...adminConfig.payments, [pm.id]: !pm.active } })} className={`w-10 h-5 rounded-full transition-all relative ${pm.active ? "bg-[var(--gold)]" : "bg-[var(--muted)]/20"}`}>
+                                                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${pm.active ? "right-1" : "left-1"}`} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="mt-10 pt-10 border-t border-[var(--border-subtle)]">
+                                        <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-3"><Truck className="w-6 h-6 text-[var(--gold)]" /> Logistics & Currency</h3>
+                                        <div className="space-y-6">
+                                            <div><label className={labelCls}>Exchange Rate (1 USD = ? NPR)</label><input type="number" value={adminConfig.exchangeRate} onChange={e => updateAdminConfig({ exchangeRate: Number(e.target.value) })} className={`${inputCls} font-mono`} /></div>
+                                            <div><label className={labelCls}>Flat Shipping Rate ($)</label><input type="number" value={adminConfig.shippingCost} onChange={e => updateAdminConfig({ shippingCost: Number(e.target.value) })} className={inputCls} /></div>
+                                            <div><label className={labelCls}>Free Shipping Over ($)</label><input type="number" value={adminConfig.freeShippingThreshold} onChange={e => updateAdminConfig({ freeShippingThreshold: Number(e.target.value) })} className={inputCls} /></div>
+                                            <button onClick={() => flash("Settings saved!")} className={btnCls + " w-full"}>Save Configuration</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </main>
+
+            {/* PRODUCT MODAL (Slide-over) */}
+            <AnimatePresence>
+                {showProductModal && (
+                    <>
+                        <motion.div key="mask" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowProductModal(false)} className="fixed inset-0 bg-black/80 z-[60] backdrop-blur-md" />
+                        <motion.div key="modal" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="fixed inset-y-0 right-0 w-full max-w-2xl bg-[var(--bg2)] z-[70] shadow-2xl p-8 lg:p-12 overflow-y-auto">
+                            <div className="flex justify-between items-center mb-10">
+                                <h3 className="font-heading text-4xl text-[var(--fg)]">{editingProduct ? "Edit" : "New"} Product</h3>
+                                <button onClick={() => setShowProductModal(false)} className="text-[var(--muted)] hover:text-white transition-colors"><XCircle className="w-8 h-8" /></button>
+                            </div>
+
+                            <form onSubmit={handleProductSubmit} className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-6">
+                                        <div><label className={labelCls}>Product Title</label><input type="text" value={productForm.title} onChange={e => setProductForm(p => ({ ...p, title: e.target.value }))} className={inputCls} placeholder="e.g. BroX Ultra Hoodie" required /></div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className={labelCls}>Regular Price ($)</label><input type="text" value={productForm.price} onChange={e => setProductForm(p => ({ ...p, price: e.target.value }))} className={`${inputCls} font-mono`} placeholder="99.00" required /></div>
+                                            <div><label className={labelCls}>Sale Price ($)</label><input type="text" value={productForm.discountPrice || ""} onChange={e => setProductForm(p => ({ ...p, discountPrice: e.target.value }))} className={`${inputCls} font-mono`} placeholder="Optional" /></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>Product Thumbnail</label>
+                                        <div className="aspect-[3/4] bg-[var(--bg3)] border-2 border-dashed border-[var(--border-subtle)] relative overflow-hidden group">
+                                            {productForm.imageUrl
+                                                ? <img src={productForm.imageUrl} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
+                                                : <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--muted)] uppercase tracking-widest text-[9px] font-bold"><ImageIcon className="w-10 h-10 mb-2 opacity-20" /> Select Media</div>
+                                            }
+                                            <input type="file" onChange={(e) => handleFileChange(e, 'imageUrl')} className="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" />
+                                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                                <p className="text-white text-[10px] uppercase tracking-widest font-bold">Change Image</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-8 pt-4">
+                                    <div>
+                                        <label className={labelCls}>Stock Quantity</label>
+                                        <input type="number" value={productForm.stock} onChange={e => setProductForm(p => ({ ...p, stock: Number(e.target.value) }))} className={`${inputCls} font-mono`} required />
+                                    </div>
+                                    <div>
+                                        <label className={labelCls}>Category</label>
+                                        <select value={productForm.category} onChange={e => setProductForm(p => ({ ...p, category: e.target.value }))} className={inputCls}>
+                                            <option value="">Select Category</option>
+                                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-8">
+                                    <div className="flex items-center gap-3 p-4 bg-[var(--bg3)] border border-[var(--border-subtle)]">
+                                        <input type="checkbox" checked={productForm.isFeatured} onChange={e => setProductForm(p => ({ ...p, isFeatured: e.target.checked }))} className="w-4 h-4 accent-[var(--gold)]" />
+                                        <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--fg)]">Featured Product</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-4 bg-[var(--bg3)] border border-[var(--border-subtle)]">
+                                        <select value={productForm.status} onChange={e => setProductForm(p => ({ ...p, status: e.target.value as any }))} className="bg-transparent text-[10px] uppercase font-bold tracking-widest text-[var(--fg)] outline-none border-none w-full">
+                                            <option>In Stock</option>
+                                            <option>Out of Stock</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className={labelCls}>Description</label>
+                                    <textarea rows={5} value={productForm.description} onChange={e => setProductForm(p => ({ ...p, description: e.target.value }))} className={`${inputCls} resize-none`} placeholder="Elaborate on the fit, material and vibe..." required />
+                                </div>
+
+                                <button type="submit" className={btnCls + " w-full py-5 text-sm"}>
+                                    <Save className="w-4 h-4 inline-block mr-2" /> {editingProduct ? "Update" : "Publish"} Item
+                                </button>
+                            </form>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
