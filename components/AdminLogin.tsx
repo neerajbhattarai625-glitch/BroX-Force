@@ -41,7 +41,12 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
     const [loading, setLoading] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => { inputRef.current?.focus(); }, []);
+    useEffect(() => {
+        // Only auto-focus on non-touch devices to prevent keyboard-induced layout shifts on mobile
+        if (window.matchMedia('(pointer: fine)').matches) {
+            inputRef.current?.focus();
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,7 +91,7 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
     return (
         <div
-            className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+            className="min-h-[100dvh] w-full flex items-center justify-center p-4 relative overflow-hidden"
             style={{ background: 'linear-gradient(135deg, var(--admin-bg-start) 0%, var(--admin-bg-mid) 50%, var(--admin-bg-end) 100%)' }}
         >
             {/* Animated background */}
@@ -117,7 +122,7 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
                 className={`relative z-10 w-full max-w-sm ${shaking ? 'animate-[wiggle_0.2s_ease-in-out_3]' : ''}`}
             >
                 <div
-                    className="crystal-card rounded-3xl p-10 text-center"
+                    className="crystal-card rounded-3xl p-6 sm:p-10 text-center"
                     style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.05)' }}
                 >
                     {/* Icon */}
