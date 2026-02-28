@@ -108,13 +108,20 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
                     style={{ backgroundImage: 'linear-gradient(rgba(200,160,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(200,160,255,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }}
                 />
 
-                {/* Rotating conic light or Prism Flare */}
+                {/* Atmospheric Pulse (High-end, no rotation for stability) */}
                 <motion.div
-                    className={`absolute inset-0 ${isLight ? 'light-prism-flare' : ''}`}
-                    style={!isLight ? { background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(200,160,255,0.04) 60deg, transparent 120deg, rgba(100,220,255,0.04) 180deg, transparent 240deg, rgba(255,200,100,0.04) 300deg, transparent 360deg)' } : {}}
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: isLight ? 25 : 22, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-0"
+                    style={{
+                        background: isLight
+                            ? 'radial-gradient(circle at 20% 30%, rgba(251,113,133,0.1) 0%, transparent 70%), radial-gradient(circle at 80% 70%, rgba(56,189,248,0.1) 0%, transparent 70%)'
+                            : 'radial-gradient(circle at 20% 30%, rgba(200,160,255,0.03) 0%, transparent 70%), radial-gradient(circle at 80% 70%, rgba(100,220,255,0.03) 0%, transparent 70%)'
+                    }}
+                    animate={{ opacity: [0.4, 0.7, 0.4], scale: [1, 1.05, 1] }}
+                    transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
                 />
+
+                {/* Iridescent Grain Overlay */}
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`, filter: 'contrast(150%) brightness(150%)' }} />
             </div>
 
             {/* Card */}
