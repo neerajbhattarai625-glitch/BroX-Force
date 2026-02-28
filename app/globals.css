@@ -158,42 +158,32 @@ html.lenis body {
   }
 }
 
-/* ===== LIQUID CRYSTAL GLASS ===== */
-/* Theme-adaptive crystal surface vars */
+/* ===== MINIMALISM PREMIUM ADMIN ===== */
 :root,
 [data-theme="dark"] {
-  --crystal-bg: rgba(255, 255, 255, 0.04);
-  --crystal-border: rgba(255, 255, 255, 0.12);
-  --crystal-shine: rgba(255, 255, 255, 0.08);
-  --crystal-text: rgba(255, 255, 255, 0.9);
-  --crystal-muted: rgba(255, 255, 255, 0.4);
-  --crystal-shadow: rgba(0, 0, 0, 0.5);
-  --crystal-prism1: rgba(180, 120, 255, 0.06);
-  --crystal-prism2: rgba(80, 200, 255, 0.05);
-  --crystal-prism3: rgba(255, 180, 80, 0.04);
-  --admin-bg-start: #06060d;
-  --admin-bg-mid: #080818;
-  --admin-bg-end: #04040c;
+  --admin-bg-start: #000000;
+  --admin-bg-mid: #0a0a0b;
+  --admin-bg-end: #050505;
+
+  --crystal-bg: rgba(15, 15, 16, 0.7);
+  --crystal-border: rgba(255, 255, 255, 0.05);
+  --crystal-shine: rgba(255, 255, 255, 0.03);
+  --crystal-text: #ffffff;
+  --crystal-muted: rgba(255, 255, 255, 0.45);
+  --crystal-shadow: rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="light"] {
-  /* Vivid blush → sky → lavender gradient background */
-  --admin-bg-start: #fce7f3;
-  --admin-bg-mid: #ede9fe;
-  --admin-bg-end: #dbeafe;
+  --admin-bg-start: #fdfdfd;
+  --admin-bg-mid: #f5f5f7;
+  --admin-bg-end: #fafafa;
 
-  /* Bright white glass surface */
-  --crystal-bg: rgba(255, 255, 255, 0.72);
-  --crystal-border: rgba(139, 92, 246, 0.28);
-  --crystal-shine: rgba(255, 255, 255, 0.92);
-  --crystal-text: rgba(15, 10, 40, 0.92);
-  --crystal-muted: rgba(80, 60, 130, 0.62);
-  --crystal-shadow: rgba(124, 58, 237, 0.14);
-
-  /* Vivid prism overlays - rose, sky, gold */
-  --crystal-prism1: rgba(244, 63, 94, 0.10);
-  --crystal-prism2: rgba(56, 189, 248, 0.10);
-  --crystal-prism3: rgba(251, 191, 36, 0.09);
+  --crystal-bg: rgba(255, 255, 255, 0.85);
+  --crystal-border: rgba(0, 0, 0, 0.05);
+  --crystal-shine: rgba(255, 255, 255, 0.9);
+  --crystal-text: #000000;
+  --crystal-muted: rgba(0, 0, 0, 0.4);
+  --crystal-shadow: rgba(0, 0, 0, 0.04);
 }
 
 /* Prism shimmer animation */
@@ -240,37 +230,19 @@ html.lenis body {
 }
 
 /* Crystal glass card surface */
+/* Minimalist Premium Card (Zen) */
 .crystal-card {
   position: relative;
   background: var(--crystal-bg);
   border: 1px solid var(--crystal-border);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  box-shadow:
-    0 8px 32px var(--crystal-shadow),
-    inset 0 1px 0 var(--crystal-shine),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 10px 40px var(--crystal-shadow);
   overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Prismatic iridescent border shimmer */
-.crystal-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg,
-      var(--crystal-prism1) 0%,
-      transparent 30%,
-      var(--crystal-prism2) 60%,
-      transparent 80%,
-      var(--crystal-prism3) 100%);
-  pointer-events: none;
-  z-index: 0;
-  animation: crystalShimmer 8s ease-in-out infinite;
-  background-size: 200% 200%;
-}
-
-/* Top edge light refraction */
+/* Subtle top edge light line */
 .crystal-card::after {
   content: '';
   position: absolute;
@@ -280,31 +252,26 @@ html.lenis body {
   height: 1px;
   background: linear-gradient(90deg,
       transparent 0%,
-      rgba(200, 160, 255, 0.6) 20%,
-      rgba(100, 220, 255, 0.8) 50%,
-      rgba(255, 200, 100, 0.6) 80%,
+      var(--gold) 20%,
+      rgba(255, 255, 255, 0.4) 50%,
+      var(--gold) 80%,
       transparent 100%);
-  animation: crystalShimmer 5s ease-in-out infinite;
-  background-size: 200% 100%;
+  opacity: 0.2;
 }
 
-/* Light mode: vivid coloured edge + inner glow */
 [data-theme="light"] .crystal-card::after {
+  opacity: 0.1;
   background: linear-gradient(90deg,
       transparent 0%,
-      rgba(244, 63, 94, 0.7) 15%,
-      rgba(139, 92, 246, 0.9) 40%,
-      rgba(56, 189, 248, 0.9) 65%,
-      rgba(251, 191, 36, 0.7) 85%,
+      var(--gold) 15%,
+      rgba(0, 0, 0, 0.1) 40%,
+      var(--gold) 65%,
       transparent 100%);
-  height: 2px;
-  animation: crystalShimmer 4s ease-in-out infinite;
 }
 
 [data-theme="light"] .crystal-card {
   box-shadow:
     0 8px 32px var(--crystal-shadow),
-    0 2px 8px rgba(139, 92, 246, 0.08),
     inset 0 1px 0 var(--crystal-shine),
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
 }

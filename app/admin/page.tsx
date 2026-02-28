@@ -20,7 +20,7 @@ type AdminTab = "dashboard" | "products" | "orders" | "customers" | "coupons" | 
 
 const inputCls = "w-full crystal-card p-3 text-[var(--crystal-text)] text-sm focus:outline-none focus:border-[var(--gold)] transition-all placeholder-[var(--crystal-muted)] rounded-lg border-0";
 const labelCls = "text-[10px] uppercase font-bold tracking-widest text-[var(--crystal-muted)] mb-1.5 block";
-const btnCls = "bg-[var(--gold)] text-black px-6 py-3 font-bold text-[11px] uppercase tracking-widest hover:bg-white transition-all duration-300 active:scale-95 disabled:opacity-50 rounded-lg";
+const btnCls = "bg-[var(--gold)] text-black px-6 py-3 font-bold text-[11px] uppercase tracking-widest hover:bg-[var(--fg)] hover:text-[var(--bg)] transition-all duration-500 active:scale-95 disabled:opacity-50 rounded-lg";
 
 export default function AdminPanel() {
     const { theme, toggleTheme } = useTheme();
@@ -42,6 +42,18 @@ export default function AdminPanel() {
     const flash = (msg: string) => {
         setSuccessMsg(msg);
         setTimeout(() => setSuccessMsg(null), 3000);
+    };
+
+    // --- PERSISTENCE: CHECK AUTH ON MOUNT ---
+    useEffect(() => {
+        const isAuthed = localStorage.getItem("brox_admin_auth") === "true" ||
+            sessionStorage.getItem("brox_admin_auth") === "true";
+        if (isAuthed) setAuthed(true);
+    }, []);
+
+    const handleAuthSuccess = () => {
+        localStorage.setItem("brox_admin_auth", "true");
+        setAuthed(true);
     };
 
     // --- DASHBOARD METRICS ---
@@ -128,9 +140,10 @@ export default function AdminPanel() {
         flash("Visuals updated successfully!");
     };
 
-    if (!authed) return <AdminLogin onSuccess={() => setAuthed(true)} />;
+    if (!authed) return <AdminLogin onSuccess={handleAuthSuccess} />;
 
     const logout = () => {
+        localStorage.removeItem("brox_admin_auth");
         sessionStorage.removeItem("brox_admin_auth");
         setAuthed(false);
     };
@@ -150,28 +163,18 @@ export default function AdminPanel() {
     return (
         <div className="min-h-screen flex" style={{ background: `linear-gradient(135deg, var(--admin-bg-start) 0%, var(--admin-bg-mid) 50%, var(--admin-bg-end) 100%)` }}>
             {/* Ambient lights — theme-aware */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                {/* Dark mode orbs */}
-                <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full" style={{ background: 'radial-gradient(circle, #c9a84c 0%, #b060ff 40%, transparent 70%)', filter: 'blur(70px)', animation: 'irisShift 12s ease-in-out infinite', opacity: theme === 'dark' ? 0.08 : 0 }} />
-                <div className="absolute bottom-1/4 right-0 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(circle, #40c8ff 0%, #a060ff 50%, transparent 70%)', filter: 'blur(60px)', animation: 'irisShift 8s ease-in-out infinite reverse', opacity: theme === 'dark' ? 0.07 : 0 }} />
-                <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full" style={{ background: 'radial-gradient(circle, #ff8040 0%, transparent 70%)', filter: 'blur(50px)', opacity: theme === 'dark' ? 0.04 : 0 }} />
+            {/* Minimalism Premium Backdrop (Zen) */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
+                style={{
+                    background: `linear-gradient(to bottom, var(--admin-bg-start), var(--admin-bg-mid), var(--admin-bg-end))`
+                }}>
+                {/* Subtle Ambient Gold Glow (Static) */}
+                <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full blur-[120px] opacity-20"
+                    style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
 
-                {/* Light mode orbs — vivid and solid */}
-                <div className="admin-orb absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(251,113,133,0.45) 0%, rgba(216,180,254,0.3) 50%, transparent 80%)', filter: 'blur(60px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '10s', '--orb-delay': '0s' } as React.CSSProperties} />
-                <div className="admin-orb absolute top-1/3 -right-20 w-[420px] h-[420px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.40) 0%, rgba(139,92,246,0.25) 55%, transparent 80%)', filter: 'blur(55px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '13s', '--orb-delay': '1s' } as React.CSSProperties} />
-                <div className="admin-orb absolute -bottom-10 left-1/3 w-[380px] h-[380px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.35) 0%, rgba(99,102,241,0.25) 55%, transparent 80%)', filter: 'blur(50px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '11s', '--orb-delay': '2s' } as React.CSSProperties} />
-                <div className="admin-orb absolute top-2/3 left-1/4 w-[300px] h-[300px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.38) 0%, rgba(244,63,94,0.2) 55%, transparent 80%)', filter: 'blur(45px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '9s', '--orb-delay': '0.5s' } as React.CSSProperties} />
-                <div className="admin-orb absolute top-10 right-1/3 w-[260px] h-[260px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.42) 0%, rgba(236,72,153,0.22) 55%, transparent 80%)', filter: 'blur(40px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '14s', '--orb-delay': '1.5s' } as React.CSSProperties} />
-
-                {/* Light mode: subtle dot-grid overlay */}
-                {theme === 'light' && (
-                    <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(124,58,237,0.12) 1px, transparent 1px)', backgroundSize: '40px 40px', opacity: 0.6 }} />
-                )}
-
-                {/* Light mode: diagonal iridescent sweep */}
-                {theme === 'light' && (
-                    <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.04) 0%, transparent 30%, rgba(56,189,248,0.05) 60%, transparent 80%, rgba(251,191,36,0.04) 100%)', animation: 'crystalShimmer 10s ease-in-out infinite', backgroundSize: '200% 200%' }} />
-                )}
+                {/* Monochromatic dot grid (Minimalist) */}
+                <div className="absolute inset-0 opacity-[0.03]"
+                    style={{ backgroundImage: 'radial-gradient(var(--crystal-text) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
             </div>
 
             {/* Sidebar */}
