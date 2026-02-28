@@ -94,7 +94,7 @@ export default function Home() {
               const isOutOfStock = product.stock <= 0 || product.status === "Out of Stock";
               return (
                 <div key={product.id} data-card className="group opacity-0">
-                  <div className="relative aspect-[3/4] overflow-hidden bg-[var(--bg2)] mb-6 border border-[var(--border-subtle)]">
+                  <div className="relative aspect-[3/4] overflow-hidden user-frosted mb-6">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={product.imageUrl} alt={product.title} className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${isOutOfStock ? "opacity-40 grayscale" : ""}`} />
 

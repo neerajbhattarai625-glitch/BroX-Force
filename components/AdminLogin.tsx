@@ -66,6 +66,9 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
         { x: '78%', y: '55%', size: 200, color: 'radial-gradient(circle, rgba(52,211,153,0.45) 0%, rgba(99,102,241,0.28) 55%, transparent 100%)', delay: 2, duration: 9 },
         { x: '4%', y: '65%', size: 165, color: 'radial-gradient(circle, rgba(251,191,36,0.50) 0%, rgba(244,63,94,0.28) 55%, transparent 100%)', delay: 1.5, duration: 11 },
         { x: '40%', y: '80%', size: 145, color: 'radial-gradient(circle, rgba(167,139,250,0.50) 0%, rgba(236,72,153,0.28) 55%, transparent 100%)', delay: 0.5, duration: 7 },
+        { x: '85%', y: '10%', size: 180, color: 'radial-gradient(circle, rgba(20,220,255,0.40) 0%, rgba(100,255,150,0.20) 55%, transparent 100%)', delay: 3, duration: 12 },
+        { x: '30%', y: '40%', size: 150, color: 'radial-gradient(circle, rgba(255,100,100,0.35) 0%, rgba(255,200,100,0.20) 55%, transparent 100%)', delay: 4, duration: 9 },
+        { x: '60%', y: '85%', size: 220, color: 'radial-gradient(circle, rgba(150,100,255,0.45) 0%, rgba(255,150,255,0.25) 55%, transparent 100%)', delay: 2.5, duration: 11 },
     ] : [
         { x: '8%', y: '18%', size: 220, color: 'radial-gradient(circle, rgba(201,168,76,0.45) 0%, rgba(160,70,255,0.25) 60%, transparent 100%)', delay: 0, duration: 8 },
         { x: '68%', y: '8%', size: 170, color: 'radial-gradient(circle, rgba(64,200,255,0.45) 0%, rgba(100,50,255,0.25) 60%, transparent 100%)', delay: 1, duration: 10 },
@@ -97,12 +100,12 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
                     style={{ backgroundImage: 'linear-gradient(rgba(200,160,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(200,160,255,1) 1px, transparent 1px)', backgroundSize: '60px 60px' }}
                 />
 
-                {/* Rotating conic light */}
+                {/* Rotating conic light or Prism Flare */}
                 <motion.div
-                    className="absolute inset-0"
-                    style={{ background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(200,160,255,0.04) 60deg, transparent 120deg, rgba(100,220,255,0.04) 180deg, transparent 240deg, rgba(255,200,100,0.04) 300deg, transparent 360deg)' }}
+                    className={`absolute inset-0 ${isLight ? 'light-prism-flare' : ''}`}
+                    style={!isLight ? { background: 'conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(200,160,255,0.04) 60deg, transparent 120deg, rgba(100,220,255,0.04) 180deg, transparent 240deg, rgba(255,200,100,0.04) 300deg, transparent 360deg)' } : {}}
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+                    transition={{ duration: isLight ? 25 : 22, repeat: Infinity, ease: 'linear' }}
                 />
             </div>
 

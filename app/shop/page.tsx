@@ -80,7 +80,7 @@ export default function ShopPage() {
                             <motion.div
                                 layout
                                 key={product.id}
-                                className="group relative bg-[var(--card)] border border-[var(--border-subtle)] flex flex-col hover:border-[var(--gold)]/30 transition-all duration-500"
+                                className="group relative user-frosted flex flex-col hover:border-[var(--gold)]/30 transition-all duration-500 overflow-hidden"
                             >
                                 {/* Badges */}
                                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
@@ -93,7 +93,7 @@ export default function ShopPage() {
                                 </div>
 
                                 {/* Image Wrapper */}
-                                <div className="relative aspect-[3/4] overflow-hidden bg-[var(--bg2)]">
+                                <div className="relative aspect-[3/4] overflow-hidden user-frosted mb-6">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
                                         src={product.imageUrl}

@@ -394,6 +394,62 @@ html.lenis body {
   animation-fill-mode: both;
 }
 
+/* Main website: Subtle frosted glass (no liquid/crystal) */
+.user-frosted {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="light"] .user-frosted {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.user-frosted:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="light"] .user-frosted:hover {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Light mode login: Prism flare effect */
+@keyframes prismFlare {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(0deg);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2) rotate(180deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(360deg);
+  }
+}
+
+.light-prism-flare {
+  background: conic-gradient(from 0deg,
+      transparent 0deg,
+      rgba(251, 113, 133, 0.2) 60deg,
+      transparent 120deg,
+      rgba(56, 189, 248, 0.2) 180deg,
+      transparent 240deg,
+      rgba(167, 139, 250, 0.2) 300deg,
+      transparent 360deg);
+  filter: blur(40px);
+  animation: prismFlare 15s linear infinite;
+}
+
 /* Light mode sidebar */
 [data-theme="light"] .crystal-sidebar {
   background: rgba(255, 255, 255, 0.8);
