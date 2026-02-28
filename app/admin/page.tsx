@@ -50,6 +50,8 @@ export default function AdminPanel() {
         return {
             revenueNPR: analytics.revenueNPR.toFixed(2),
             revenueUSD: analytics.revenueUSD.toFixed(2),
+            profitNPR: analytics.profitNPR.toFixed(2),
+            profitUSD: analytics.profitUSD.toFixed(2),
             totalOrders: orders.length,
             pendingOrders,
             totalCustomers: customers.length,
@@ -64,7 +66,7 @@ export default function AdminPanel() {
     const [showProductModal, setShowProductModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [productForm, setProductForm] = useState<Omit<Product, "id">>({
-        title: "", price: "0.00", description: "", category: "T-Shirts", imageUrl: "",
+        title: "", price: "0.00", costPrice: "0.00", description: "", category: "T-Shirts", imageUrl: "",
         sizes: ["S", "M", "L", "XL"], colors: ["Black", "White"], stock: 100,
         status: "In Stock", isFeatured: false, discountPrice: ""
     });
@@ -281,22 +283,24 @@ export default function AdminPanel() {
                         {activeTab === "dashboard" && (
                             <motion.div key="dash" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
                                 {/* Stats Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
                                     {[
                                         { label: "Revenue (NPR)", val: `Rs.${metrics.revenueNPR}`, icon: DollarSign, color: "text-[var(--gold)]" },
                                         { label: "Revenue (USD)", val: `$${metrics.revenueUSD}`, icon: TrendingUp, color: "text-green-400" },
+                                        { label: "Profit (NPR)", val: `Rs.${metrics.profitNPR}`, icon: CreditCard, color: "text-emerald-400" },
+                                        { label: "Profit (USD)", val: `$${metrics.profitUSD}`, icon: TrendingUp, color: "text-cyan-400" },
                                         { label: "Total Orders", val: metrics.totalOrders, icon: ShoppingCart, color: "text-blue-400" },
                                         { label: "Total Products", val: metrics.totalProducts, icon: Package, color: "text-purple-400" },
                                     ].map((s, i) => (
-                                        <motion.div key={i} whileHover={{ y: -4, scale: 1.01 }} className="crystal-card p-6 rounded-2xl transition-all duration-300 cursor-default">
+                                        <motion.div key={i} whileHover={{ y: -4, scale: 1.01 }} className="crystal-card p-4 rounded-2xl transition-all duration-300 cursor-default">
                                             <div className="flex justify-between items-start mb-4">
-                                                <div className={`p-3 rounded-xl crystal-card ${s.color}`}>
-                                                    <s.icon className="w-5 h-5" />
+                                                <div className={`p-2 rounded-xl crystal-card ${s.color}`}>
+                                                    <s.icon className="w-4 h-4" />
                                                 </div>
-                                                <TrendingUp className="w-4 h-4 text-green-400/40" />
+                                                <TrendingUp className="w-3 h-3 text-green-400/40" />
                                             </div>
-                                            <p className="text-[10px] uppercase tracking-[0.2em] mb-1 font-bold" style={{ color: 'var(--crystal-muted)' }}>{s.label}</p>
-                                            <h3 className="text-3xl font-mono tracking-tighter" style={{ color: 'var(--crystal-text)' }}>{s.val}</h3>
+                                            <p className="text-[9px] uppercase tracking-widest mb-1 font-bold" style={{ color: 'var(--crystal-muted)' }}>{s.label}</p>
+                                            <h3 className="text-xl font-mono tracking-tighter" style={{ color: 'var(--crystal-text)' }}>{s.val}</h3>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -366,7 +370,7 @@ export default function AdminPanel() {
                                         <button onClick={() => {
                                             setEditingProduct(null);
                                             setProductForm({
-                                                title: "", price: "0.00", description: "", category: "T-Shirts", imageUrl: "",
+                                                title: "", price: "0.00", costPrice: "0.00", description: "", category: "T-Shirts", imageUrl: "",
                                                 sizes: ["S", "M", "L", "XL"], colors: ["Black", "White"], stock: 100,
                                                 status: "In Stock", isFeatured: false, discountPrice: ""
                                             });
@@ -391,6 +395,7 @@ export default function AdminPanel() {
                                                 <th className="p-4 text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Image</th>
                                                 <th className="p-4 text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Product Details</th>
                                                 <th className="p-4 text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Category</th>
+                                                <th className="p-4 text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Cost</th>
                                                 <th className="p-4 text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Price</th>
                                                 <th className="p-4 text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Stock</th>
                                                 <th className="p-4 text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Actions</th>
@@ -415,6 +420,7 @@ export default function AdminPanel() {
                                                         </div>
                                                     </td>
                                                     <td className="p-4 text-[11px] uppercase tracking-wider" style={{ color: 'var(--crystal-muted)' }}>{p.category}</td>
+                                                    <td className="p-4 font-mono text-xs" style={{ color: 'var(--crystal-muted)' }}>${p.costPrice}</td>
                                                     <td className="p-4">
                                                         <p className="font-mono text-xs font-bold" style={{ color: 'var(--crystal-text)' }}>${p.price}</p>
                                                         {p.discountPrice && <p className="font-mono text-[9px] line-through" style={{ color: 'var(--crystal-muted)' }}>${p.discountPrice}</p>}
@@ -426,6 +432,7 @@ export default function AdminPanel() {
                                                                 setEditingProduct(p);
                                                                 setProductForm({
                                                                     ...p,
+                                                                    costPrice: p.costPrice || "0.00",
                                                                     sizes: p.sizes || [],
                                                                     colors: p.colors || [],
                                                                     discountPrice: p.discountPrice || ""
@@ -797,9 +804,10 @@ export default function AdminPanel() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-6">
                                         <div><label className={labelCls}>Product Title</label><input type="text" value={productForm.title} onChange={e => setProductForm(p => ({ ...p, title: e.target.value }))} className={inputCls} placeholder="e.g. BroX Ultra Hoodie" required /></div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div><label className={labelCls}>Regular Price ($)</label><input type="text" value={productForm.price} onChange={e => setProductForm(p => ({ ...p, price: e.target.value }))} className={`${inputCls} font-mono`} placeholder="99.00" required /></div>
-                                            <div><label className={labelCls}>Sale Price ($)</label><input type="text" value={productForm.discountPrice || ""} onChange={e => setProductForm(p => ({ ...p, discountPrice: e.target.value }))} className={`${inputCls} font-mono`} placeholder="Optional" /></div>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            <div><label className={labelCls}>Cost ($)</label><input type="text" value={productForm.costPrice} onChange={e => setProductForm(p => ({ ...p, costPrice: e.target.value }))} className={`${inputCls} font-mono`} placeholder="45.00" required /></div>
+                                            <div><label className={labelCls}>Price ($)</label><input type="text" value={productForm.price} onChange={e => setProductForm(p => ({ ...p, price: e.target.value }))} className={`${inputCls} font-mono`} placeholder="99.00" required /></div>
+                                            <div><label className={labelCls}>Sale ($)</label><input type="text" value={productForm.discountPrice || ""} onChange={e => setProductForm(p => ({ ...p, discountPrice: e.target.value }))} className={`${inputCls} font-mono`} placeholder="Opt" /></div>
                                         </div>
                                     </div>
                                     <div>

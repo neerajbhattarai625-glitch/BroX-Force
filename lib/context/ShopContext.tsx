@@ -7,6 +7,7 @@ export type Product = {
     id: string;
     title: string;
     price: string;
+    costPrice: string;
     discountPrice?: string;
     description: string;
     category: string;
@@ -63,6 +64,8 @@ export type AnalyticsData = {
     totalPageHits: number;
     revenueNPR: number;
     revenueUSD: number;
+    profitNPR: number;
+    profitUSD: number;
 };
 
 export type AdminConfig = {
@@ -85,10 +88,11 @@ const DEFAULT_PRODUCTS: Product[] = [
         id: "prod_1",
         title: "VORTEX Technical Hoodie",
         price: "120.00",
-        description: "Premium heavy-weight fleece with water-repellent finish. Reflective accents and multiple utilitarian pockets.",
+        costPrice: "45.00",
+        description: "Premium tech-wear hoodie with water-resistant fabric and multi-pocket configuration.",
         category: "Hoodies",
         imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800",
-        sizes: ["S", "M", "L", "XL"],
+        sizes: ["M", "L", "XL"],
         colors: ["Black", "Grey"],
         stock: 50,
         status: "In Stock",
@@ -98,6 +102,7 @@ const DEFAULT_PRODUCTS: Product[] = [
         id: "prod_2",
         title: "NEON-GRID Oversized Tee",
         price: "45.00",
+        costPrice: "15.00",
         description: "Drop shoulder heavyweight cotton tee with cyber-grid back print.",
         category: "T-Shirts",
         imageUrl: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=800",
@@ -111,6 +116,7 @@ const DEFAULT_PRODUCTS: Product[] = [
         id: "prod_3",
         title: "SPECTER Cargo Trousers",
         price: "150.00",
+        costPrice: "60.00",
         description: "Articulated fit cargo pants with adjustable ankle straps and hidden cyber-pockets.",
         category: "Trousers",
         imageUrl: "https://images.unsplash.com/photo-1584865288642-42078afe6942?auto=format&fit=crop&q=80&w=800",
@@ -171,7 +177,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     const [theme, setTheme] = useState<ThemeImages>(DEFAULT_THEME);
     const [orders, setOrders] = useState<Order[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [analytics, setAnalytics] = useState<AnalyticsData>({ uniqueVisitors: 0, totalPageHits: 0, revenueNPR: 0, revenueUSD: 0 });
+    const [analytics, setAnalytics] = useState<AnalyticsData>({ uniqueVisitors: 0, totalPageHits: 0, revenueNPR: 0, revenueUSD: 0, profitNPR: 0, profitUSD: 0 });
     const [adminConfig, setAdminConfig] = useState<AdminConfig>({
         email: "codevengers8848@gmail.com",
         passwordHash: "brox@admin2024",
@@ -504,30 +510,58 @@ export function ShopProvider({ children }: { children: ReactNode }) {
                     });
                 }
 
-                // --- Revenue Management ---
+                // --- Revenue & Profit Management ---
                 const wasRevenueCounted = oldStatus === "Shipped" || oldStatus === "Delivered";
                 const isRevenueCounted = newStatus === "Shipped" || newStatus === "Delivered";
 
                 if (!wasRevenueCounted && isRevenueCounted) {
                     setAnalytics(prev => {
-                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : parseFloat(order.total) * adminConfig.exchangeRate;
-                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : parseFloat(order.total) / adminConfig.exchangeRate;
+                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : (parseFloat(order.total) * adminConfig.exchangeRate);
+                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : (parseFloat(order.total) / adminConfig.exchangeRate);
+
+                        // Calculate Profit
+                        let totalCostNPR = 0;
+                        order.items.forEach(item => {
+                            const p = products.find(prod => prod.title === item.title);
+                            const costNPR = p ? (parseFloat(p.costPrice) * (order.paymentCurrency === "USD" ? adminConfig.exchangeRate : 1)) : 0;
+                            totalCostNPR += costNPR * item.quantity;
+                        });
+
+                        const profitNPR = revNPR - totalCostNPR;
+                        const profitUSD = revUSD - (totalCostNPR / adminConfig.exchangeRate);
+
                         const updated = {
                             ...prev,
                             revenueNPR: prev.revenueNPR + revNPR,
-                            revenueUSD: prev.revenueUSD + revUSD
+                            revenueUSD: prev.revenueUSD + revUSD,
+                            profitNPR: prev.profitNPR + profitNPR,
+                            profitUSD: prev.profitUSD + profitUSD
                         };
                         save("analytics", updated);
                         return updated;
                     });
                 } else if (wasRevenueCounted && !isRevenueCounted && newStatus === "Cancelled") {
                     setAnalytics(prev => {
-                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : parseFloat(order.total) * adminConfig.exchangeRate;
-                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : parseFloat(order.total) / adminConfig.exchangeRate;
+                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : (parseFloat(order.total) * adminConfig.exchangeRate);
+                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : (parseFloat(order.total) / adminConfig.exchangeRate);
+
+                        // Calculate Profit to deduct
+                        let totalCostNPR = 0;
+                        order.items.forEach(item => {
+                            const p = products.find(prod => prod.title === item.title);
+                            const costNPR = p ? (parseFloat(p.costPrice) * (order.paymentCurrency === "USD" ? adminConfig.exchangeRate : 1)) : 0;
+                            totalCostNPR += costNPR * item.quantity;
+                        });
+
+                        const profitNPR = revNPR - totalCostNPR;
+                        const profitUSD = revUSD - (totalCostNPR / adminConfig.exchangeRate);
+
                         const updated = {
                             ...prev,
                             revenueNPR: Math.max(0, prev.revenueNPR - revNPR),
-                            revenueUSD: Math.max(0, prev.revenueUSD - revUSD)
+                            revenueUSD: Math.max(0, prev.revenueUSD - revUSD),
+                            profitNPR: Math.max(0, prev.profitNPR - profitNPR),
+                            profitUSD: Math.max(0, prev.profitUSD - profitUSD)
                         };
                         save("analytics", updated);
                         return updated;
