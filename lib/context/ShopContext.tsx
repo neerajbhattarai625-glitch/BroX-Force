@@ -227,8 +227,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
             const st = localStorage.getItem("brox_theme");
             if (st) setTheme(JSON.parse(st));
 
-            const so = localStorage.getItem("brox_orders");
-            if (so) setOrders(JSON.parse(so));
+            // Orders are now loaded from the API
+            fetch('/api/orders').then(res => res.json()).then(data => {
+                if (Array.isArray(data)) setOrders(data);
+            }).catch(console.error);
 
             const sc = localStorage.getItem("brox_customers");
             if (sc) setCustomers(JSON.parse(sc));
@@ -406,95 +408,117 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         return { success: true, discount: v.discountPercentage, message: `${v.discountPercentage}% discount applied!` };
     }, [vouchers]);
 
-    const addOrder = useCallback((data: Omit<Order, "id" | "createdAt" | "status" | "paymentStatus">) => {
-        const order: Order = {
-            ...data,
-            id: `order_${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            status: "Pending",
-            paymentStatus: "Unpaid",
-            paymentCurrency: (data as any).paymentCurrency || "NPR",
-        };
-
-        setOrders(prev => {
-            const u = [order, ...prev];
-            save("orders", u);
-            return u;
-        });
-
-        setAnalytics(prev => {
-            const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : parseFloat(order.total) * adminConfig.exchangeRate;
-            const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : parseFloat(order.total) / adminConfig.exchangeRate;
-            const updated = {
-                ...prev,
-                revenueNPR: prev.revenueNPR + revNPR,
-                revenueUSD: prev.revenueUSD + revUSD
-            };
-            save("analytics", updated);
-            return updated;
-        });
-
-        setCustomers(prev => {
-            const ex = prev.find(c => c.email === order.customerEmail);
-            let u;
-            if (ex) {
-                u = prev.map(c => c.email === order.customerEmail ? { ...c, totalSpent: c.totalSpent + parseFloat(order.total), orderHistory: [order.id, ...c.orderHistory] } : c);
-            } else {
-                u = [{ id: `cust_${Date.now()}`, name: order.customerName, email: order.customerEmail, phone: order.customerPhone, address: order.customerLocation, orderHistory: [order.id], totalSpent: parseFloat(order.total), isBlocked: false }, ...prev];
+    const addOrder = useCallback(async (data: Omit<Order, "id" | "createdAt" | "status" | "paymentStatus">) => {
+        try {
+            const formData = {
+                ...data,
+                paymentCurrency: (data as any).paymentCurrency || "NPR"
             }
-            save("customers", u);
-            return u;
-        });
+            const res = await fetch("/api/orders", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
+            const newOrder = await res.json();
+
+            setOrders(prev => [newOrder, ...prev]);
+
+            setAnalytics(prev => {
+                const revNPR = newOrder.paymentCurrency === "NPR" ? parseFloat(newOrder.total) : parseFloat(newOrder.total) * adminConfig.exchangeRate;
+                const revUSD = newOrder.paymentCurrency === "USD" ? parseFloat(newOrder.total) : parseFloat(newOrder.total) / adminConfig.exchangeRate;
+                const updated = {
+                    ...prev,
+                    revenueNPR: prev.revenueNPR + revNPR,
+                    revenueUSD: prev.revenueUSD + revUSD
+                };
+                save("analytics", updated);
+                return updated;
+            });
+
+            // Updating customers can still be local for now or eventually moved to API
+            setCustomers(prev => {
+                const ex = prev.find(c => c.email === newOrder.customerEmail);
+                let u;
+                if (ex) {
+                    u = prev.map(c => c.email === newOrder.customerEmail ? { ...c, totalSpent: c.totalSpent + parseFloat(newOrder.total), orderHistory: [newOrder.id, ...c.orderHistory] } : c);
+                } else {
+                    u = [{ id: `cust_${Date.now()}`, name: newOrder.customerName, email: newOrder.customerEmail, phone: newOrder.customerPhone, address: newOrder.customerLocation, orderHistory: [newOrder.id], totalSpent: parseFloat(newOrder.total), isBlocked: false }, ...prev];
+                }
+                save("customers", u);
+                return u;
+            });
+
+        } catch (error) {
+            console.error("Failed to add order to db", error);
+        }
     }, [adminConfig.exchangeRate]);
 
-    const updateOrderStatus = useCallback((id: string, status: OrderStatus) => {
+    const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
         const order = orders.find(o => o.id === id);
         if (!order) return;
 
-        setOrders(prev => {
-            const u = prev.map(o => o.id === id ? { ...o, status, isStockReduced: (status === "Shipped" || o.isStockReduced) ? true : false } : o);
-            save("orders", u);
-            return u;
-        });
-
-        if (order.appliedVoucher && (status === "Shipped" || status === "Delivered")) {
-            setVouchers(vv => {
-                const next = vv.map(v => v.code === order.appliedVoucher ? { ...v, isActive: false } : v);
-                save("vouchers", next);
-                return next;
+        try {
+            const res = await fetch(`/api/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status, isStockReduced: (status === "Shipped" || order.isStockReduced) ? true : false })
             });
-        }
 
-        if (status === "Shipped" && !order.isStockReduced) {
-            setProducts(currentProducts => {
-                const updatedProducts = currentProducts.map(p => {
-                    const item = order.items.find(i => i.title === p.title);
-                    if (item) {
-                        const newStock = Math.max(0, p.stock - item.quantity);
-                        return { ...p, stock: newStock, status: newStock === 0 ? "Out of Stock" : p.status } as Product;
-                    }
-                    return p;
-                });
-                save("products", updatedProducts);
-                return updatedProducts;
-            });
+            if (res.ok) {
+                setOrders(prev => prev.map(o => o.id === id ? { ...o, status, isStockReduced: (status === "Shipped" || order.isStockReduced) ? true : false } : o));
+
+                if (order.appliedVoucher && (status === "Shipped" || status === "Delivered")) {
+                    setVouchers(vv => {
+                        const next = vv.map(v => v.code === order.appliedVoucher ? { ...v, isActive: false } : v);
+                        save("vouchers", next);
+                        return next;
+                    });
+                }
+
+                if (status === "Shipped" && !order.isStockReduced) {
+                    setProducts(currentProducts => {
+                        const updatedProducts = currentProducts.map(p => {
+                            const item = order.items.find(i => i.title === p.title);
+                            if (item) {
+                                const newStock = Math.max(0, p.stock - item.quantity);
+                                return { ...p, stock: newStock, status: newStock === 0 ? "Out of Stock" : p.status } as Product;
+                            }
+                            return p;
+                        });
+                        save("products", updatedProducts);
+                        return updatedProducts;
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Failed to update order status", error);
         }
     }, [orders]);
 
-    const updatePaymentStatus = useCallback((id: string, status: PaymentStatus) => {
-        setOrders(prev => {
-            const u = prev.map(o => o.id === id ? { ...o, paymentStatus: status } : o);
-            save("orders", u);
-            return u;
-        });
+    const updatePaymentStatus = useCallback(async (id: string, status: PaymentStatus) => {
+        try {
+            const res = await fetch(`/api/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentStatus: status })
+            });
+            if (res.ok) {
+                setOrders(prev => prev.map(o => o.id === id ? { ...o, paymentStatus: status } : o));
+            }
+        } catch (error) {
+            console.error("Failed to update payment status", error);
+        }
     }, []);
 
-    const deleteOrder = useCallback((id: string) => {
-        setOrders(prev => {
-            const u = prev.filter(o => o.id !== id);
-            save("orders", u);
-            return u;
-        });
+    const deleteOrder = useCallback(async (id: string) => {
+        try {
+            const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setOrders(prev => prev.filter(o => o.id !== id));
+            }
+        } catch (error) {
+            console.error("Failed to delete order", error);
+        }
     }, []);
 
     const updateCustomer = useCallback((id: string, data: Partial<Customer>) => {
