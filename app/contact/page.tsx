@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Instagram, Twitter, Facebook, Mail, MapPin, Phone, Send, Sparkles, ShieldCheck, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -22,6 +23,36 @@ export default function Contact() {
             opacity: 1,
             y: 0,
             transition: { type: "spring", stiffness: 100, damping: 12 }
+        }
+    };
+
+    const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+    const [submitting, setSubmitting] = useState(false);
+    const [status, setStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        setStatus({ type: null, message: '' });
+
+        try {
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                setStatus({ type: 'success', message: 'Transmission Successful. We will connect soon.' });
+                setFormData({ name: '', email: '', subject: '', message: '' });
+            } else {
+                setStatus({ type: 'error', message: data.error || 'Transmission Failed. Secure line interrupted.' });
+            }
+        } catch (error) {
+            setStatus({ type: 'error', message: 'Network error. Secure line interrupted.' });
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -123,33 +154,40 @@ export default function Contact() {
                             <h2 className="text-xl font-heading text-[var(--fg)] uppercase tracking-widest">Signal Transmission</h2>
                         </div>
 
-                        <form className="space-y-8">
+                        {status.message && (
+                            <div className={`mb-6 p-4 border text-xs font-bold uppercase tracking-widest ${status.type === 'success' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
+                                {status.message}
+                            </div>
+                        )}
+
+                        <form className="space-y-8" onSubmit={handleSubmit}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <label className={labelCls}>Identity</label>
-                                    <input type="text" className={inputCls} placeholder="Your Name" />
+                                    <label className={labelCls}>Identity *</label>
+                                    <input required type="text" className={inputCls} placeholder="Your Name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className={labelCls}>Frequency (Email)</label>
-                                    <input type="email" className={inputCls} placeholder="name@domain.com" />
+                                    <label className={labelCls}>Frequency (Email) *</label>
+                                    <input required type="email" className={inputCls} placeholder="name@domain.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
                                 </div>
                             </div>
 
                             <div>
                                 <label className={labelCls}>Direct Subject</label>
-                                <input type="text" className={inputCls} placeholder="How can we assist?" />
+                                <input type="text" className={inputCls} placeholder="How can we assist?" value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} />
                             </div>
 
                             <div>
-                                <label className={labelCls}>Briefing</label>
-                                <textarea rows={6} className={inputCls + " resize-none"} placeholder="Detail your requirements..." />
+                                <label className={labelCls}>Briefing *</label>
+                                <textarea required rows={6} className={inputCls + " resize-none"} placeholder="Detail your requirements..." value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })} />
                             </div>
 
                             <button
-                                type="button"
-                                className="group relative w-full bg-[var(--gold)] text-black font-black uppercase tracking-[0.4em] text-[11px] py-6 overflow-hidden transition-all duration-500 hover:bg-white active:scale-[0.98]"
+                                type="submit"
+                                disabled={submitting}
+                                className="group relative w-full bg-[var(--gold)] text-black font-black uppercase tracking-[0.4em] text-[11px] py-6 overflow-hidden transition-all duration-500 hover:bg-white active:scale-[0.98] disabled:opacity-50 disabled:hover:bg-[var(--gold)]"
                             >
-                                <span className="relative z-10">Transmit Message</span>
+                                <span className="relative z-10">{submitting ? "Transmitting..." : "Transmit Message"}</span>
                                 <div className="absolute inset-0 bg-white translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-700 ease-in-out"></div>
                             </button>
 

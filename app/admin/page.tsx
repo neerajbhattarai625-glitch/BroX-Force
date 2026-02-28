@@ -342,7 +342,7 @@ export default function AdminPanel() {
                                 </div>
 
                                 <div className="bg-[var(--card)] border border-[var(--border-subtle)] overflow-hidden">
-                                    <table className="w-full text-left border-collapse">
+                                    <div className="w-full overflow-x-auto"><table className="w-full text-left border-collapse">
                                         <thead>
                                             <tr className="bg-[var(--bg3)] border-b border-[var(--border-subtle)]">
                                                 <th className="p-4 text-[10px] uppercase tracking-widest text-[var(--muted)] font-bold">Image</th>
@@ -397,7 +397,7 @@ export default function AdminPanel() {
                                                 </tr>
                                             ))}
                                         </tbody>
-                                    </table>
+                                    </table></div>
                                     {products.length === 0 && <div className="p-20 text-center text-[var(--muted)] uppercase tracking-widest text-xs">No products found</div>}
                                 </div>
                             </motion.div>
@@ -519,7 +519,7 @@ export default function AdminPanel() {
                         {activeTab === "customers" && (
                             <motion.div key="cust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
                                 <div className="bg-[var(--card)] border border-[var(--border-subtle)] overflow-hidden">
-                                    <table className="w-full text-left">
+                                    <div className="w-full overflow-x-auto"><table className="w-full text-left">
                                         <thead>
                                             <tr className="bg-[var(--bg3)] border-b border-[var(--border-subtle)]">
                                                 <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Profile</th>
@@ -556,7 +556,7 @@ export default function AdminPanel() {
                                                 </tr>
                                             ))}
                                         </tbody>
-                                    </table>
+                                    </table></div>
                                 </div>
                             </motion.div>
                         )}

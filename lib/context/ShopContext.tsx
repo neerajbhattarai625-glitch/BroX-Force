@@ -173,7 +173,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [analytics, setAnalytics] = useState<AnalyticsData>({ uniqueVisitors: 0, totalPageHits: 0, revenueNPR: 0, revenueUSD: 0 });
     const [adminConfig, setAdminConfig] = useState<AdminConfig>({
-        email: "neerajbhattarai625@gmail.com",
+        email: "codevengers8848@gmail.com",
         passwordHash: "brox@admin2024",
         payments: { esewa: true, khalti: true, stripe: false, cod: true, paypal: true },
         shippingCost: 5,
