@@ -48,7 +48,7 @@ export default function Home() {
           className="absolute inset-0 z-0"
           style={{ backgroundImage: `url('${heroBg}')`, backgroundAttachment: "fixed", backgroundSize: "cover", backgroundPosition: "center" }}
         />
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/65 via-black/40 to-[var(--bg)]" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/80 via-black/40 to-[#000000]" />
 
         <div ref={heroRef} className="relative z-20 text-center px-6 max-w-4xl mx-auto">
           <div data-hero className="inline-flex items-center gap-3 mb-10 opacity-0">

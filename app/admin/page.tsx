@@ -183,20 +183,16 @@ export default function AdminPanel() {
     ];
 
     return (
-        <div className="min-h-screen flex" style={{ background: `linear-gradient(135deg, var(--admin-bg-start) 0%, var(--admin-bg-mid) 50%, var(--admin-bg-end) 100%)` }}>
+        <div className="min-h-screen flex" style={{ background: '#000000' }}>
             {/* Ambient lights — theme-aware */}
-            {/* Minimalism Premium Backdrop (Zen) */}
+            {/* Premium Black Matte Backdrop (Zen) */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
                 style={{
-                    background: `linear-gradient(to bottom, var(--admin-bg-start), var(--admin-bg-mid), var(--admin-bg-end))`
+                    background: '#000000'
                 }}>
-                {/* Subtle Ambient Gold Glow (Static) */}
-                <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full blur-[120px] opacity-20"
+                {/* Extremely Subtle Ambient Gold Glow (Static) */}
+                <div className="absolute top-[-30%] left-[-15%] w-[80%] h-[80%] rounded-full blur-[150px] opacity-[0.08]"
                     style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
-
-                {/* Monochromatic dot grid (Minimalist) */}
-                <div className="absolute inset-0 opacity-[0.03]"
-                    style={{ backgroundImage: 'radial-gradient(var(--crystal-text) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
             </div>
 
             {/* Sidebar */}

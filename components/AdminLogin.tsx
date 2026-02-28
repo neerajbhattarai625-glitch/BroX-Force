@@ -47,16 +47,16 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
         <div
             className="fixed inset-0 w-screen h-screen flex items-center justify-center p-6 z-[99999] overflow-hidden touch-none"
             style={{
-                background: isLight ? '#fdfdfd' : '#0a0a0b',
+                background: isLight ? '#ffffff' : '#000000',
             }}
         >
-            {/* Subtle Gradient Backdrop (Static) */}
+            {/* Subtle Ambient Glow (Static) */}
             <div
                 className="absolute inset-0 opacity-40 pointer-events-none"
                 style={{
                     background: isLight
-                        ? 'radial-gradient(circle at 50% -20%, #f0f0f0 0%, transparent 70%)'
-                        : 'radial-gradient(circle at 50% -20%, #1a1a1c 0%, transparent 70%)'
+                        ? 'radial-gradient(circle at 50% -20%, #f9f9f9 0%, transparent 80%)'
+                        : 'radial-gradient(circle at 50% -20%, #0a0a0a 0%, transparent 80%)'
                 }}
             />
 

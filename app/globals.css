@@ -6,39 +6,39 @@
   --font-heading: "Italiana", "Cormorant Garamond", serif;
 }
 
-/* ===== DARK (default) ===== */
+/* ===== DARK (Default Matte) ===== */
 :root,
 [data-theme="dark"] {
-  --bg: #080808;
-  --bg2: #0f0f0f;
-  --bg3: #141414;
-  --fg: #f5f5f5;
-  --muted: #a1a1aa;
-  --border: rgba(201, 168, 76, 0.2);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --card: #0f0f0f;
-  --nav-bg: rgba(8, 8, 8, 0.92);
+  --bg: #000000;
+  --bg2: #050505;
+  --bg3: #0a0a0a;
+  --fg: #ffffff;
+  --muted: #888888;
+  --border: rgba(201, 168, 76, 0.15);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --card: #050505;
+  --nav-bg: rgba(0, 0, 0, 0.95);
   --gold: #c9a84c;
   --gold-hover: #e8c96d;
-  --gold-dim: rgba(201, 168, 76, 0.15);
+  --gold-dim: rgba(201, 168, 76, 0.08);
   --gold-text: #d4af37;
   --gold-hero: #c9a84c;
 }
 
-/* ===== LIGHT ===== */
+/* ===== LIGHT (Soft Matte) ===== */
 [data-theme="light"] {
   --bg: #ffffff;
-  --bg2: #f8f8f6;
-  --bg3: #f1f1ee;
-  --fg: #111111;
-  --muted: #52525b;
-  --border: rgba(154, 114, 38, 0.25);
-  --border-subtle: rgba(0, 0, 0, 0.1);
+  --bg2: #fdfdfd;
+  --bg3: #f5f5f7;
+  --fg: #000000;
+  --muted: #666666;
+  --border: rgba(154, 114, 38, 0.2);
+  --border-subtle: rgba(0, 0, 0, 0.04);
   --card: #ffffff;
-  --nav-bg: rgba(255, 255, 255, 0.94);
+  --nav-bg: rgba(255, 255, 255, 0.96);
   --gold: #9a7b2c;
   --gold-hover: #b48e35;
-  --gold-dim: rgba(154, 123, 44, 0.12);
+  --gold-dim: rgba(154, 123, 44, 0.1);
   --gold-text: #816624;
   --gold-hero: #c9a84c;
 }
@@ -158,32 +158,32 @@ html.lenis body {
   }
 }
 
-/* ===== MINIMALISM PREMIUM ADMIN ===== */
+/* ===== PREMIUM BLACK MATTE ADMIN ===== */
 :root,
 [data-theme="dark"] {
   --admin-bg-start: #000000;
-  --admin-bg-mid: #0a0a0b;
-  --admin-bg-end: #050505;
+  --admin-bg-mid: #020202;
+  --admin-bg-end: #000000;
 
-  --crystal-bg: rgba(15, 15, 16, 0.7);
-  --crystal-border: rgba(255, 255, 255, 0.05);
-  --crystal-shine: rgba(255, 255, 255, 0.03);
+  --crystal-bg: rgba(5, 5, 5, 0.82);
+  --crystal-border: rgba(255, 255, 255, 0.04);
+  --crystal-shine: rgba(255, 255, 255, 0.01);
   --crystal-text: #ffffff;
-  --crystal-muted: rgba(255, 255, 255, 0.45);
-  --crystal-shadow: rgba(0, 0, 0, 0.4);
+  --crystal-muted: rgba(255, 255, 255, 0.4);
+  --crystal-shadow: rgba(0, 0, 0, 0.6);
 }
 
 [data-theme="light"] {
-  --admin-bg-start: #fdfdfd;
-  --admin-bg-mid: #f5f5f7;
+  --admin-bg-start: #ffffff;
+  --admin-bg-mid: #fdfdfd;
   --admin-bg-end: #fafafa;
 
-  --crystal-bg: rgba(255, 255, 255, 0.85);
-  --crystal-border: rgba(0, 0, 0, 0.05);
-  --crystal-shine: rgba(255, 255, 255, 0.9);
+  --crystal-bg: rgba(255, 255, 255, 0.9);
+  --crystal-border: rgba(0, 0, 0, 0.03);
+  --crystal-shine: rgba(255, 255, 255, 0.95);
   --crystal-text: #000000;
   --crystal-muted: rgba(0, 0, 0, 0.4);
-  --crystal-shadow: rgba(0, 0, 0, 0.04);
+  --crystal-shadow: rgba(0, 0, 0, 0.02);
 }
 
 /* Prism shimmer animation */
@@ -231,18 +231,19 @@ html.lenis body {
 
 /* Crystal glass card surface */
 /* Minimalist Premium Card (Zen) */
+/* Premium Frosted Glass (Matte Blur) */
 .crystal-card {
   position: relative;
   background: var(--crystal-bg);
   border: 1px solid var(--crystal-border);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 10px 40px var(--crystal-shadow);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 12px 50px var(--crystal-shadow);
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Subtle top edge light line */
+/* Very subtle top edge light line */
 .crystal-card::after {
   content: '';
   position: absolute;
@@ -252,21 +253,15 @@ html.lenis body {
   height: 1px;
   background: linear-gradient(90deg,
       transparent 0%,
-      var(--gold) 20%,
-      rgba(255, 255, 255, 0.4) 50%,
-      var(--gold) 80%,
+      var(--gold) 25%,
+      rgba(255, 255, 255, 0.3) 50%,
+      var(--gold) 75%,
       transparent 100%);
-  opacity: 0.2;
+  opacity: 0.1;
 }
 
 [data-theme="light"] .crystal-card::after {
-  opacity: 0.1;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      var(--gold) 15%,
-      rgba(0, 0, 0, 0.1) 40%,
-      var(--gold) 65%,
-      transparent 100%);
+  opacity: 0.05;
 }
 
 [data-theme="light"] .crystal-card {
@@ -361,29 +356,31 @@ html.lenis body {
   animation-fill-mode: both;
 }
 
-/* Main website: Subtle frosted glass (no liquid/crystal) */
+/* Main website: Premium Frosted Glass (Matte Blur) */
 .user-frosted {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px) saturate(120%);
-  -webkit-backdrop-filter: blur(12px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] .user-frosted {
-  background: rgba(255, 255, 255, 0.45);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
 .user-frosted:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.55);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
 }
 
 [data-theme="light"] .user-frosted:hover {
-  background: rgba(255, 255, 255, 0.6);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.06);
 }
 
 /* Light mode login: Prism flare effect */
