@@ -24,17 +24,22 @@
   --gold-text: #d4af37;
   --gold-hero: #c9a84c;
 
-  /* Metallic Highlights */
+  /* Metallic Highlights (Refined Zenith) */
   --silver: #a8a8a8;
   --silver-bright: #e0e0e0;
   --gold-metallic: linear-gradient(90deg, #c9a84c, #f5e3a8, #c9a84c);
   --silver-metallic: linear-gradient(90deg, #a8a8a8, #e0e0e0, #a8a8a8);
+
+  /* Specular "Gloss" Highlights (High-End Reflection) */
+  --glossy-gold: linear-gradient(135deg, transparent 30%, rgba(201, 168, 76, 0.15) 45%, rgba(255, 255, 255, 0.4) 50%, rgba(201, 168, 76, 0.15) 55%, transparent 70%);
+  --glossy-silver: linear-gradient(135deg, transparent 30%, rgba(168, 168, 168, 0.15) 45%, rgba(255, 255, 255, 0.4) 50%, rgba(168, 168, 168, 0.15) 55%, transparent 70%);
+
   --dual-metallic: linear-gradient(90deg,
       transparent 0%,
       #c9a84c 15%,
       #f5e3a8 30%,
-      #e0e0e0 50%,
-      #a8a8a8 70%,
+      #ffffff 50%,
+      #e0e0e0 70%,
       #c9a84c 85%,
       transparent 100%);
 }
@@ -243,9 +248,26 @@ html.lenis body {
   }
 }
 
-/* Crystal glass card surface */
-/* Minimalist Premium Card (Zen) */
-/* Premium Frosted Glass (Matte Blur) */
+/* Crystal Sidebar Variant — Polished Reflective */
+.crystal-sidebar {
+  background: var(--crystal-bg);
+  backdrop-filter: blur(48px) saturate(200%);
+  -webkit-backdrop-filter: blur(48px) saturate(200%);
+  border-right: 1px solid var(--crystal-border);
+  box-shadow: 4px 0 32px var(--crystal-shadow);
+  position: relative;
+}
+
+.crystal-sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glossy-silver);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* Crystal Glass Card Surface — Glossy Specular */
 .crystal-card {
   position: relative;
   background: var(--crystal-bg);
@@ -257,21 +279,25 @@ html.lenis body {
   transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Very subtle top edge light line (Dual Metallic Refraction) */
+.crystal-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glossy-gold);
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+/* Sharper top edge light line (Dual Metallic Gloss) */
 .crystal-card::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
+  height: 1.5px;
   background: var(--dual-metallic);
-  opacity: 0.15;
-}
-
-[data-theme="light"] .crystal-card::after {
-  opacity: 0.08;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.25;
 }
 
 [data-theme="light"] .crystal-card {

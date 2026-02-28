@@ -219,7 +219,11 @@ export default function AdminPanel() {
                                 }`}
                             style={{
                                 color: activeTab === item.id ? 'var(--gold)' : 'var(--crystal-muted)',
-                                ...(activeTab === item.id ? { background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.25)', boxShadow: '0 0 12px rgba(201,168,76,0.08)' } : { border: '1px solid transparent' })
+                                ...(activeTab === item.id ? {
+                                    background: 'linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.06))',
+                                    border: '1px solid rgba(201,168,76,0.3)',
+                                    boxShadow: '0 4px 20px rgba(0,0,0,0.4), inset 0 0.5px 0 rgba(255,255,255,0.15)'
+                                } : { border: '1px solid transparent' })
                             }}
                         >
                             <item.icon className="w-4 h-4 transition-transform group-hover:scale-110" />

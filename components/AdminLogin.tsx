@@ -68,14 +68,22 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
                 className={`relative z-10 w-full max-w-[380px] ${shaking ? 'animate-[wiggle_0.2s_ease-in-out_3]' : ''}`}
             >
                 <div
-                    className="rounded-[32px] p-8 sm:p-10 text-center border transition-colors duration-500"
+                    className="rounded-[32px] p-8 sm:p-10 text-center border transition-colors duration-500 relative overflow-hidden"
                     style={{
-                        backgroundColor: isLight ? 'rgba(255, 255, 255, 0.8)' : 'rgba(15, 15, 16, 0.8)',
-                        borderColor: isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(20px)',
-                        boxShadow: isLight ? '0 20px 50px rgba(0,0,0,0.05)' : '0 20px 80px rgba(0,0,0,0.3)'
+                        backgroundColor: isLight ? 'rgba(255, 255, 255, 0.8)' : 'rgba(5, 5, 5, 0.85)',
+                        borderColor: isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.08)',
+                        backdropFilter: 'blur(32px)',
+                        boxShadow: isLight ? '0 20px 50px rgba(0,0,0,0.05)' : '0 24px 80px rgba(0,0,0,0.6)'
                     }}
                 >
+                    {/* Glossy Specular Layer */}
+                    {!isLight && (
+                        <div className="absolute inset-0 pointer-events-none opacity-20"
+                            style={{ background: 'var(--glossy-gold)' }} />
+                    )}
+                    {/* Dual-Refraction Rim */}
+                    <div className="absolute top-0 left-0 right-0 h-[1.5px] opacity-30"
+                        style={{ background: 'var(--dual-metallic)' }} />
                     {/* Minimal Icon */}
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-8 transition-colors duration-500"
                         style={{
