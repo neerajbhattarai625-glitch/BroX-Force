@@ -430,154 +430,114 @@ export default function AdminPanel() {
 
                         {/* 3. ORDERS PAGE */}
                         {activeTab === "orders" && (
-                            <motion.div key="ord" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] divide-y divide-[var(--border-subtle)]">
-                                    {orders.map(o => (
-                                        <div key={o.id} className="p-6 md:p-8 flex flex-col lg:flex-row gap-10">
-                                            <div className="flex-1 space-y-6">
-                                                <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-4">
-                                                    <div>
-                                                        <p className="text-[10px] uppercase tracking-widest text-[var(--gold)] font-bold mb-1">Order Ref: {o.id.split('_')[1]}</p>
-                                                        <div className="flex items-center gap-3">
-                                                            <h3 className="font-heading text-3xl text-[var(--fg)]">{o.customerName}</h3>
-                                                            <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 border ${o.status === "Delivered" ? "border-green-500/30 text-green-400 bg-green-500/5" :
-                                                                o.status === "Cancelled" ? "border-red-500/30 text-red-500 bg-red-500/5" :
-                                                                    "border-[var(--gold)]/30 text-[var(--gold)] bg-[var(--gold)]/5"
-                                                                }`}>{o.status}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-xs text-[var(--muted)] font-mono">{new Date(o.createdAt).toLocaleString()}</p>
-                                                        <p className="text-xl font-mono text-[var(--fg)] font-bold mt-1">${o.total}</p>
+                            <motion.div key="ord" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+                                {orders.map(o => (
+                                    <div key={o.id} className="crystal-card rounded-2xl p-6 md:p-8 flex flex-col lg:flex-row gap-8">
+                                        <div className="flex-1 space-y-6">
+                                            <div className="flex items-start justify-between pb-4" style={{ borderBottom: '1px solid var(--crystal-border)' }}>
+                                                <div>
+                                                    <p className="text-[10px] uppercase tracking-widest text-[var(--gold)] font-bold mb-1">Order Ref: {o.id.split('_')[1]}</p>
+                                                    <div className="flex items-center gap-3 flex-wrap">
+                                                        <h3 className="font-heading text-2xl" style={{ color: 'var(--crystal-text)' }}>{o.customerName}</h3>
+                                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border ${o.status === "Delivered" ? "border-green-500/30 text-green-400 bg-green-500/10" : o.status === "Cancelled" ? "border-red-500/30 text-red-400 bg-red-500/10" : "border-[var(--gold)]/30 text-[var(--gold)] bg-[var(--gold)]/10"}`}>{o.status}</span>
                                                     </div>
                                                 </div>
+                                                <div className="text-right">
+                                                    <p className="text-xs font-mono" style={{ color: 'var(--crystal-muted)' }}>{new Date(o.createdAt).toLocaleString()}</p>
+                                                    <p className="text-xl font-mono font-bold mt-1" style={{ color: 'var(--crystal-text)' }}>${o.total}</p>
+                                                </div>
+                                            </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                                                    <div className="space-y-4">
-                                                        <h4 className="text-[9px] uppercase tracking-widest text-[var(--muted)] font-bold border-b border-white/5 pb-2">Shipping Info</h4>
-                                                        <div className="space-y-3 text-[11px] text-[var(--muted)] leading-relaxed font-medium">
-                                                            <p className="flex items-center gap-3"><Phone className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerPhone}</p>
-                                                            <p className="flex items-center gap-3"><Mail className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerEmail}</p>
-                                                            <p className="flex items-center gap-3"><MapPin className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerLocation}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-4">
-                                                        <h4 className="text-[9px] uppercase tracking-widest text-[var(--muted)] font-bold border-b border-white/5 pb-2">Workflow Controls</h4>
-                                                        <div className="space-y-4">
-                                                            {o.status === "Pending" ? (
-                                                                <motion.button
-                                                                    whileHover={{ scale: 1.02 }}
-                                                                    whileTap={{ scale: 0.98 }}
-                                                                    onClick={() => updateOrderStatus(o.id, "Shipped")}
-                                                                    className="w-full flex items-center justify-center gap-3 bg-[var(--gold)] text-black py-3.5 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-colors border border-[var(--gold)] shadow-xl shadow-[var(--gold)]/10"
-                                                                >
-                                                                    <Truck className="w-4 h-4" /> Confirm & Ship
-                                                                </motion.button>
-                                                            ) : (
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {(["Pending", "Shipped", "Delivered", "Cancelled"] as OrderStatus[]).map(s => (
-                                                                        <motion.button
-                                                                            key={s}
-                                                                            initial={false}
-                                                                            animate={{
-                                                                                backgroundColor: o.status === s ? (s === "Delivered" ? "#22c55e" : "#c9a84c") : "transparent",
-                                                                                color: o.status === s ? "#000000" : "var(--muted)",
-                                                                                borderColor: o.status === s ? (s === "Delivered" ? "#22c55e" : "#c9a84c") : "var(--border-subtle)"
-                                                                            }}
-                                                                            onClick={() => updateOrderStatus(o.id, s)}
-                                                                            className="px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold border transition-all"
-                                                                        >
-                                                                            {s}
-                                                                        </motion.button>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                            <div className="flex gap-4 items-end">
-                                                                <div className="flex-1">
-                                                                    <p className="text-[8px] uppercase tracking-widest text-[var(--muted)] mb-1.5 font-bold">Payment Status</p>
-                                                                    <select value={o.paymentStatus} onChange={(e) => updatePaymentStatus(o.id, e.target.value as PaymentStatus)} className="w-full bg-[var(--bg3)] border border-[var(--border-subtle)] p-2.5 text-[10px] uppercase font-bold text-[var(--fg)] outline-none focus:border-[var(--gold)] transition-colors">
-                                                                        {(["Unpaid", "Paid", "Refunded"] as PaymentStatus[]).map(s => <option key={s}>{s}</option>)}
-                                                                    </select>
-                                                                </div>
-                                                                <button onClick={() => { if (confirm("Delete order?")) deleteOrder(o.id); }} className="p-2.5 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all"><Trash2 className="w-4 h-4" /></button>
-                                                            </div>
-                                                        </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-3">
+                                                    <h4 className="text-[9px] uppercase tracking-widest font-bold pb-2" style={{ color: 'var(--crystal-muted)', borderBottom: '1px solid var(--crystal-border)' }}>Shipping Info</h4>
+                                                    <div className="space-y-2 text-[11px] leading-relaxed font-medium" style={{ color: 'var(--crystal-muted)' }}>
+                                                        <p className="flex items-center gap-3"><Phone className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerPhone}</p>
+                                                        <p className="flex items-center gap-3"><Mail className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerEmail}</p>
+                                                        <p className="flex items-center gap-3"><MapPin className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerLocation}</p>
                                                     </div>
                                                 </div>
-
-                                                <div className="bg-[var(--bg3)] border border-[var(--border-subtle)] p-5">
-                                                    <div className="flex justify-between items-center mb-3">
-                                                        <h4 className="text-[9px] uppercase tracking-widest text-[var(--muted)] font-bold">Order Basket</h4>
-                                                        {o.appliedVoucher && (
-                                                            <div className="flex items-center gap-2 bg-[var(--gold)]/10 px-2 py-0.5 border border-[var(--gold)]/30">
-                                                                <Tag className="w-3 h-3 text-[var(--gold)]" />
-                                                                <span className="text-[9px] font-black uppercase tracking-widest text-[var(--gold)]">Voucher: {o.appliedVoucher}</span>
+                                                <div className="space-y-3">
+                                                    <h4 className="text-[9px] uppercase tracking-widest font-bold pb-2" style={{ color: 'var(--crystal-muted)', borderBottom: '1px solid var(--crystal-border)' }}>Workflow Controls</h4>
+                                                    <div className="space-y-3">
+                                                        {o.status === "Pending" ? (
+                                                            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => updateOrderStatus(o.id, "Shipped")} className="w-full flex items-center justify-center gap-3 bg-[var(--gold)] text-black py-3 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-colors rounded-xl">
+                                                                <Truck className="w-4 h-4" /> Confirm & Ship
+                                                            </motion.button>
+                                                        ) : (
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {(["Pending", "Shipped", "Delivered", "Cancelled"] as OrderStatus[]).map(s => (
+                                                                    <motion.button key={s} initial={false} animate={{ backgroundColor: o.status === s ? (s === "Delivered" ? "#22c55e" : "#c9a84c") : "transparent", color: o.status === s ? "#000" : 'var(--crystal-muted)', borderColor: o.status === s ? (s === "Delivered" ? "#22c55e" : "#c9a84c") : 'var(--crystal-border)' }} onClick={() => updateOrderStatus(o.id, s)} className="px-3 py-1.5 text-[9px] uppercase tracking-widest font-bold border rounded-lg transition-all">{s}</motion.button>
+                                                                ))}
                                                             </div>
                                                         )}
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        {o.items.map((item, idx) => (
-                                                            <div key={idx} className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider pb-2 border-b border-white/5 last:border-0 last:pb-0">
-                                                                <div>
-                                                                    <span className="text-[var(--fg)]">{item.title}</span>
-                                                                    <span className="text-[var(--gold)] ml-2">x{item.quantity}</span>
-                                                                    {item.customSize ? (
-                                                                        <span className="text-[var(--gold)] ml-2 border border-[var(--gold)]/30 px-1.5 py-0.5 rounded-sm">Personal: {item.customSize}</span>
-                                                                    ) : (
-                                                                        item.size && <span className="text-[var(--muted)] ml-2">[{item.size}]</span>
-                                                                    )}
-                                                                </div>
-                                                                <span className="font-mono text-[var(--muted)]">${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                                                        <div className="flex gap-3 items-end">
+                                                            <div className="flex-1">
+                                                                <p className="text-[8px] uppercase tracking-widest font-bold mb-1.5" style={{ color: 'var(--crystal-muted)' }}>Payment Status</p>
+                                                                <select value={o.paymentStatus} onChange={(e) => updatePaymentStatus(o.id, e.target.value as PaymentStatus)} className="w-full crystal-card rounded-lg p-2.5 text-[10px] uppercase font-bold outline-none border-0" style={{ color: 'var(--crystal-text)', background: 'var(--crystal-bg)' }}>
+                                                                    {(["Unpaid", "Paid", "Refunded"] as PaymentStatus[]).map(s => <option key={s}>{s}</option>)}
+                                                                </select>
                                                             </div>
-                                                        ))}
+                                                            <button onClick={() => { if (confirm("Delete order?")) deleteOrder(o.id); }} className="p-2.5 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all"><Trash2 className="w-4 h-4" /></button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div className="crystal-card rounded-xl p-5">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <h4 className="text-[9px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>Order Basket</h4>
+                                                    {o.appliedVoucher && (<div className="flex items-center gap-2 px-2 py-0.5 rounded-full" style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)' }}><Tag className="w-3 h-3 text-[var(--gold)]" /><span className="text-[9px] font-black uppercase tracking-widest text-[var(--gold)]">Voucher: {o.appliedVoucher}</span></div>)}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {o.items.map((item, idx) => (
+                                                        <div key={idx} className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider py-2" style={{ borderBottom: idx < o.items.length - 1 ? '1px solid var(--crystal-border)' : 'none' }}>
+                                                            <div style={{ color: 'var(--crystal-text)' }}>{item.title} <span className="text-[var(--gold)]">x{item.quantity}</span>{item.customSize ? <span className="text-[var(--gold)] ml-2 border border-[var(--gold)]/30 px-1 py-0.5 rounded">Personal: {item.customSize}</span> : item.size && <span className="ml-2" style={{ color: 'var(--crystal-muted)' }}>[{item.size}]</span>}</div>
+                                                            <span className="font-mono" style={{ color: 'var(--crystal-muted)' }}>${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </div>
-                                    ))}
-                                    {orders.length === 0 && <div className="p-20 text-center text-[var(--muted)] italic text-sm">No orders yet</div>}
-                                </div>
+                                    </div>
+                                ))}
+                                {orders.length === 0 && <div className="crystal-card rounded-2xl p-20 text-center text-sm italic" style={{ color: 'var(--crystal-muted)' }}>No orders yet</div>}
                             </motion.div>
                         )}
 
                         {/* 4. CUSTOMERS */}
                         {activeTab === "customers" && (
                             <motion.div key="cust" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] overflow-hidden">
+                                <div className="crystal-card rounded-2xl overflow-hidden">
                                     <div className="w-full overflow-x-auto"><table className="w-full text-left">
                                         <thead>
-                                            <tr className="bg-[var(--bg3)] border-b border-[var(--border-subtle)]">
-                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Profile</th>
-                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Contact</th>
-                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Total Orders</th>
-                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Revenue</th>
-                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest text-[var(--muted)]">Actions</th>
+                                            <tr style={{ background: 'var(--crystal-bg)', borderBottom: '1px solid var(--crystal-border)' }}>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Profile</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Contact</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Orders</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Revenue</th>
+                                                <th className="p-5 text-[10px] uppercase font-bold tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-[var(--border-subtle)]">
+                                        <tbody className="divide-y" style={{ borderColor: 'var(--crystal-border)' }}>
                                             {customers.map(c => (
-                                                <tr key={c.id} className="hover:bg-[var(--bg2)] transition-all">
-                                                    <td className="p-5 flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${c.isBlocked ? "bg-red-500/20 text-red-500" : "bg-[var(--gold-dim)] text-[var(--gold)]"}`}>
-                                                            {c.name.charAt(0)}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-bold text-[var(--fg)] text-xs uppercase tracking-wider">{c.name}</p>
-                                                            <span className={`text-[8px] uppercase font-bold ${c.isBlocked ? "text-red-400" : "text-green-400"}`}>{c.isBlocked ? "Blocked" : "Active Member"}</span>
+                                                <tr key={c.id} className="crystal-hover transition-all">
+                                                    <td className="p-5">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${c.isBlocked ? "bg-red-500/15 text-red-400" : "text-[var(--gold)]"}`} style={!c.isBlocked ? { background: 'rgba(201,168,76,0.12)' } : {}}>{c.name.charAt(0)}</div>
+                                                            <div>
+                                                                <p className="font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--crystal-text)' }}>{c.name}</p>
+                                                                <span className={`text-[8px] uppercase font-bold ${c.isBlocked ? 'text-red-400' : 'text-green-400'}`}>{c.isBlocked ? 'Blocked' : 'Active'}</span>
+                                                            </div>
                                                         </div>
                                                     </td>
                                                     <td className="p-5">
-                                                        <p className="text-xs text-[var(--muted)] font-medium mb-1">{c.email}</p>
-                                                        <p className="text-xs text-[var(--muted)] font-medium">{c.phone}</p>
+                                                        <p className="text-xs font-medium mb-1" style={{ color: 'var(--crystal-muted)' }}>{c.email}</p>
+                                                        <p className="text-xs font-medium" style={{ color: 'var(--crystal-muted)' }}>{c.phone}</p>
                                                     </td>
-                                                    <td className="p-5 text-xs font-mono text-[var(--fg)]">{c.orderHistory.length}</td>
+                                                    <td className="p-5 text-xs font-mono" style={{ color: 'var(--crystal-text)' }}>{c.orderHistory.length}</td>
                                                     <td className="p-5 text-sm font-mono text-[var(--gold)] font-bold">${c.totalSpent.toFixed(2)}</td>
-                                                    <td className="p-5">
-                                                        {c.isBlocked
-                                                            ? <button onClick={() => updateCustomer(c.id, { isBlocked: false })} className="text-[10px] uppercase font-bold tracking-widest text-green-400 hover:text-green-300">Unblock</button>
-                                                            : <button onClick={() => updateCustomer(c.id, { isBlocked: true })} className="text-[10px] uppercase font-bold tracking-widest text-red-400/60 hover:text-red-400">Block</button>
-                                                        }
-                                                    </td>
+                                                    <td className="p-5">{c.isBlocked ? <button onClick={() => updateCustomer(c.id, { isBlocked: false })} className="text-[10px] uppercase font-bold tracking-widest text-green-400 hover:text-green-300">Unblock</button> : <button onClick={() => updateCustomer(c.id, { isBlocked: true })} className="text-[10px] uppercase font-bold tracking-widest text-red-400/60 hover:text-red-400">Block</button>}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -589,8 +549,8 @@ export default function AdminPanel() {
                         {/* 5. COUPONS */}
                         {activeTab === "coupons" && (
                             <motion.div key="coup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
-                                <div className="lg:col-span-4 bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8 h-fit">
-                                    <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)] mb-8">Create Coupon</h3>
+                                <div className="lg:col-span-4 crystal-card rounded-2xl p-4 sm:p-6 lg:p-8 h-fit">
+                                    <h3 className="font-heading text-xl md:text-2xl mb-8" style={{ color: 'var(--crystal-text)' }}>Create Coupon</h3>
                                     <form onSubmit={(e) => {
                                         e.preventDefault();
                                         const d = new FormData(e.currentTarget);
@@ -605,38 +565,24 @@ export default function AdminPanel() {
                                         <button type="submit" className={btnCls + " w-full"}>Issue Coupon</button>
                                     </form>
                                 </div>
-                                <div className="lg:col-span-8 bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8">
-                                    <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)] mb-8">Active Vouchers</h3>
+                                <div className="lg:col-span-8 crystal-card rounded-2xl p-4 sm:p-6 lg:p-8">
+                                    <h3 className="font-heading text-xl md:text-2xl mb-8" style={{ color: 'var(--crystal-text)' }}>Active Vouchers</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {vouchers.map((v, i) => (
-                                            <div key={i} className="p-6 bg-[var(--bg2)] border border-[var(--border-subtle)] relative overflow-hidden group">
-                                                <div className="absolute -right-4 -top-4 w-12 h-12 bg-[var(--gold)]/10 rotate-45 border border-[var(--gold)]/20" />
+                                            <div key={i} className="crystal-card rounded-xl p-6 relative overflow-hidden group">
+                                                <div className="absolute -right-4 -top-4 w-12 h-12 rotate-45" style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)' }} />
                                                 <p className="font-mono text-xl font-black text-[var(--gold)] mb-1 tracking-tighter">{v.code}</p>
-                                                <p className="text-[10px] uppercase font-bold text-[var(--muted)] mb-4">{v.discountPercentage}% OFF</p>
-                                                <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-bold">
-                                                    <span className="text-[var(--muted)]">Uses: {v.usageCount} / {v.usageLimit || '∞'}</span>
+                                                <p className="text-[10px] uppercase font-bold mb-4" style={{ color: 'var(--crystal-muted)' }}>{v.discountPercentage}% OFF</p>
+                                                <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>
+                                                    <span>Uses: {v.usageCount} / {v.usageLimit || '∞'}</span>
                                                     <div className="flex items-center gap-3">
-                                                        <span className={v.isActive ? "text-green-400" : "text-red-400"}>
-                                                            {v.isActive ? "Active" : "Inactive"}
-                                                        </span>
-                                                        <span className={new Date(v.expiryDate || '2099') < new Date() ? "text-red-400" : "text-[var(--muted)]"}>
-                                                            {v.expiryDate ? new Date(v.expiryDate).toLocaleDateString() : '∞'}
-                                                        </span>
+                                                        <span className={v.isActive ? 'text-green-400' : 'text-red-400'}>{v.isActive ? 'Active' : 'Inactive'}</span>
+                                                        <span className={new Date(v.expiryDate || '2099') < new Date() ? 'text-red-400' : ''}>{v.expiryDate ? new Date(v.expiryDate).toLocaleDateString() : '∞'}</span>
                                                     </div>
                                                 </div>
-                                                <div className="mt-4 flex gap-2 border-t border-white/5 pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => toggleVoucherStatus(v.code)}
-                                                        className={`flex-1 text-[8px] uppercase font-black py-2 border transition-all ${v.isActive ? "border-red-500/30 text-red-500 hover:bg-red-500/10" : "border-green-500/30 text-green-400 hover:bg-green-500/10"}`}
-                                                    >
-                                                        {v.isActive ? "Deactivate" : "Activate"}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => { if (confirm(`Delete ${v.code}?`)) deleteVoucher(v.code); }}
-                                                        className="px-3 py-2 border border-white/10 text-gray-400 hover:border-red-500 hover:text-red-500 transition-all"
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </button>
+                                                <div className="mt-4 flex gap-2 pt-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ borderTop: '1px solid var(--crystal-border)' }}>
+                                                    <button onClick={() => toggleVoucherStatus(v.code)} className={`flex-1 text-[8px] uppercase font-black py-2 rounded-lg border transition-all ${v.isActive ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}`}>{v.isActive ? 'Deactivate' : 'Activate'}</button>
+                                                    <button onClick={() => { if (confirm(`Delete ${v.code}?`)) deleteVoucher(v.code); }} className="px-3 py-2 rounded-lg transition-all crystal-card" style={{ color: 'var(--crystal-muted)' }}><Trash2 className="w-3.5 h-3.5" /></button>
                                                 </div>
                                             </div>
                                         ))}
@@ -648,8 +594,8 @@ export default function AdminPanel() {
                         {/* 6. CATEGORIES */}
                         {activeTab === "categories" && (
                             <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl space-y-8" style={{ maxWidth: '100vw' }}>
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8">
-                                    <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)] mb-8">Category Management</h3>
+                                <div className="crystal-card rounded-2xl p-4 sm:p-6 lg:p-8">
+                                    <h3 className="font-heading text-xl md:text-2xl mb-8" style={{ color: 'var(--crystal-text)' }}>Category Management</h3>
 
                                     <div className="flex flex-col sm:flex-row gap-4 mb-10 w-full">
                                         <input
@@ -685,8 +631,8 @@ export default function AdminPanel() {
 
                                     <div className="space-y-3">
                                         {categories.map(cat => (
-                                            <div key={cat} className="group flex items-center justify-between p-4 bg-[var(--bg3)] border border-[var(--border-subtle)] hover:border-[var(--gold)] transition-all">
-                                                <span className="text-sm font-bold uppercase tracking-widest text-[var(--fg)]">{cat}</span>
+                                            <div key={cat} className="crystal-card crystal-hover group flex items-center justify-between p-4 rounded-xl transition-all">
+                                                <span className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--crystal-text)' }}>{cat}</span>
                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => {
@@ -719,21 +665,20 @@ export default function AdminPanel() {
                         {/* 7. CONTENT */}
                         {activeTab === "content" && (
                             <motion.div key="cont" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl space-y-8">
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
-                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Site Assets & CMS</h3>
+                                <div className="crystal-card rounded-2xl p-8">
+                                    <h3 className="font-heading text-2xl mb-8" style={{ color: 'var(--crystal-text)' }}>Site Assets & CMS</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                        {/* Brand Story */}
                                         <form onSubmit={handleCmsSubmit} className="space-y-6">
                                             <div><label className={labelCls}>Homepage Hero Image</label><input type="url" value={cmsForm.hero} onChange={e => setCmsForm(prev => ({ ...prev, hero: e.target.value }))} className={inputCls} placeholder="https://..." /></div>
                                             <div><label className={labelCls}>Footer Background</label><input type="url" value={cmsForm.footer} onChange={e => setCmsForm(prev => ({ ...prev, footer: e.target.value }))} className={inputCls} placeholder="https://..." /></div>
                                             <div><label className={labelCls}>Custom Logo URL</label><input type="url" value={cmsForm.logo} onChange={e => setCmsForm(prev => ({ ...prev, logo: e.target.value }))} className={inputCls} placeholder="https://..." /></div>
                                             <button type="submit" className={btnCls + " w-full"}>Update Assets</button>
                                         </form>
-                                        <div className="bg-[var(--bg3)] p-6 border border-[var(--border-subtle)] flex flex-col items-center justify-center text-center">
+                                        <div className="crystal-card rounded-xl p-6 flex flex-col items-center justify-center text-center">
                                             <Paintbrush className="w-12 h-12 text-[var(--gold)] mb-4 opacity-50" />
-                                            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--fg)] mb-2">UI Styling Mode</h4>
-                                            <p className="text-[10px] text-[var(--muted)] leading-relaxed mb-6 uppercase tracking-widest">Animations are globally synchronised. Adding products or editing content does not disrupt the luxury entrance effects.</p>
-                                            <button onClick={resetTheme} className="text-[10px] font-bold uppercase tracking-widest border border-[var(--border)] px-6 py-2 hover:bg-white hover:text-black transition-all">Revert to Defaults</button>
+                                            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: 'var(--crystal-text)' }}>UI Styling Mode</h4>
+                                            <p className="text-[10px] leading-relaxed mb-6 uppercase tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Animations are globally synchronised. Adding products or editing content does not disrupt the luxury entrance effects.</p>
+                                            <button onClick={resetTheme} className={btnCls + " !bg-transparent !text-[var(--gold)] border border-[var(--gold)]/30 hover:!bg-[var(--gold)] hover:!text-black"}>Revert to Defaults</button>
                                         </div>
                                     </div>
                                 </div>
@@ -743,9 +688,9 @@ export default function AdminPanel() {
                         {/* 7. MEDIA MANAGER */}
                         {activeTab === "media" && (
                             <motion.div key="med" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                <div className="crystal-card rounded-2xl p-8">
                                     <div className="flex justify-between items-center mb-10">
-                                        <h3 className="font-heading text-2xl text-[var(--fg)]">Digital Assets Library</h3>
+                                        <h3 className="font-heading text-2xl" style={{ color: 'var(--crystal-text)' }}>Digital Assets Library</h3>
                                         <label className={`${btnCls} cursor-pointer inline-flex items-center gap-2`}>
                                             <Plus className="w-4 h-4" /> Upload Mockups
                                             <input type="file" className="hidden" accept="image/*" multiple />
@@ -754,7 +699,7 @@ export default function AdminPanel() {
 
                                     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
                                         {products.map(p => (
-                                            <div key={p.id} className="aspect-square bg-[var(--bg2)] border border-[var(--border-subtle)] relative group overflow-hidden">
+                                            <div key={p.id} className="aspect-square crystal-card rounded-xl relative group overflow-hidden">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img src={p.imageUrl} alt="" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -763,8 +708,8 @@ export default function AdminPanel() {
                                                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2 text-[8px] uppercase font-bold text-white tracking-widest truncate">{p.title}</div>
                                             </div>
                                         ))}
-                                        <div className="aspect-square bg-[var(--bg3)] border-2 border-dashed border-[var(--border-subtle)] flex items-center justify-center">
-                                            <ImageIcon className="w-8 h-8 text-[var(--muted)] opacity-20" />
+                                        <div className="aspect-square crystal-card rounded-xl border-2 border-dashed flex items-center justify-center" style={{ borderColor: 'var(--crystal-border)' }}>
+                                            <ImageIcon className="w-8 h-8 opacity-20" style={{ color: 'var(--crystal-muted)' }} />
                                         </div>
                                     </div>
                                 </div>
@@ -774,8 +719,8 @@ export default function AdminPanel() {
                         {/* 8. SETTINGS */}
                         {activeTab === "settings" && (
                             <motion.div key="sett" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
-                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-3"><ShieldCheck className="w-6 h-6 text-[var(--gold)]" /> Security & Account</h3>
+                                <div className="crystal-card rounded-2xl p-8">
+                                    <h3 className="font-heading text-2xl mb-8 flex items-center gap-3" style={{ color: 'var(--crystal-text)' }}><ShieldCheck className="w-6 h-6 text-[var(--gold)]" /> Security & Account</h3>
                                     <form onSubmit={handlePasswordChange} className="space-y-6">
                                         <div><label className={labelCls}>Global Admin Password</label><input type="password" value={pwForm.new} onChange={e => setPwForm(p => ({ ...p, new: e.target.value }))} className={inputCls} placeholder="Enter new password" required /></div>
                                         <div><label className={labelCls}>Confirm Password</label><input type="password" value={pwForm.confirm} onChange={e => setPwForm(p => ({ ...p, confirm: e.target.value }))} className={inputCls} placeholder="Verify password" required /></div>
@@ -784,9 +729,9 @@ export default function AdminPanel() {
                                     </form>
                                 </div>
 
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
-                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-3"><CreditCard className="w-6 h-6 text-[var(--gold)]" /> Payment Gateways</h3>
-                                    <div className="space-y-4">
+                                <div className="crystal-card rounded-2xl p-8">
+                                    <h3 className="font-heading text-2xl mb-8 flex items-center gap-3" style={{ color: 'var(--crystal-text)' }}><CreditCard className="w-6 h-6 text-[var(--gold)]" /> Payment Gateways</h3>
+                                    <div className="space-y-3">
                                         {[
                                             { id: "esewa", label: "eSewa Payment", active: adminConfig.payments.esewa },
                                             { id: "khalti", label: "Khalti SDK", active: adminConfig.payments.khalti },
@@ -794,8 +739,8 @@ export default function AdminPanel() {
                                             { id: "paypal", label: "PayPal Express", active: adminConfig.payments.paypal },
                                             { id: "cod", label: "Cash on Delivery", active: adminConfig.payments.cod }
                                         ].map(pm => (
-                                            <div key={pm.id} className="flex items-center justify-between p-4 bg-[var(--bg3)] border border-[var(--border-subtle)]">
-                                                <span className="text-xs uppercase font-bold tracking-widest text-[var(--fg)]">{pm.label}</span>
+                                            <div key={pm.id} className="crystal-card crystal-hover flex items-center justify-between p-4 rounded-xl">
+                                                <span className="text-xs uppercase font-bold tracking-widest" style={{ color: 'var(--crystal-text)' }}>{pm.label}</span>
                                                 <button onClick={() => updateAdminConfig({ payments: { ...adminConfig.payments, [pm.id]: !pm.active } })} className={`w-10 h-5 rounded-full transition-all relative ${pm.active ? "bg-[var(--gold)]" : "bg-[var(--muted)]/20"}`}>
                                                     <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${pm.active ? "right-1" : "left-1"}`} />
                                                 </button>
@@ -803,8 +748,8 @@ export default function AdminPanel() {
                                         ))}
                                     </div>
 
-                                    <div className="mt-10 pt-10 border-t border-[var(--border-subtle)]">
-                                        <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-3"><Truck className="w-6 h-6 text-[var(--gold)]" /> Logistics & Currency</h3>
+                                    <div className="mt-10 pt-10" style={{ borderTop: '1px solid var(--crystal-border)' }}>
+                                        <h3 className="font-heading text-2xl mb-8 flex items-center gap-3" style={{ color: 'var(--crystal-text)' }}><Truck className="w-6 h-6 text-[var(--gold)]" /> Logistics & Currency</h3>
                                         <div className="space-y-6">
                                             <div><label className={labelCls}>Exchange Rate (1 USD = ? NPR)</label><input type="number" value={adminConfig.exchangeRate} onChange={e => updateAdminConfig({ exchangeRate: Number(e.target.value) })} className={`${inputCls} font-mono`} /></div>
                                             <div><label className={labelCls}>Flat Shipping Rate ($)</label><input type="number" value={adminConfig.shippingCost} onChange={e => updateAdminConfig({ shippingCost: Number(e.target.value) })} className={inputCls} /></div>
@@ -823,10 +768,10 @@ export default function AdminPanel() {
             <AnimatePresence>
                 {showProductModal && (
                     <>
-                        <motion.div key="mask" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowProductModal(false)} className="fixed inset-0 bg-black/80 z-[60] backdrop-blur-md" />
-                        <motion.div key="modal" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="fixed inset-y-0 right-0 w-full max-w-2xl bg-[var(--bg2)] z-[70] shadow-2xl p-8 lg:p-12 overflow-y-auto">
+                        <motion.div key="mask" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowProductModal(false)} className="fixed inset-0 bg-black/60 z-[60]" style={{ backdropFilter: 'blur(20px)' }} />
+                        <motion.div key="modal" initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="fixed inset-y-0 right-0 w-full max-w-2xl z-[70] shadow-2xl p-8 lg:p-12 overflow-y-auto crystal-sidebar">
                             <div className="flex justify-between items-center mb-10">
-                                <h3 className="font-heading text-4xl text-[var(--fg)]">{editingProduct ? "Edit" : "New"} Product</h3>
+                                <h3 className="font-heading text-4xl" style={{ color: 'var(--crystal-text)' }}>{editingProduct ? "Edit" : "New"} Product</h3>
                                 <button onClick={() => setShowProductModal(false)} className="text-[var(--muted)] hover:text-white transition-colors"><XCircle className="w-8 h-8" /></button>
                             </div>
 
@@ -841,7 +786,7 @@ export default function AdminPanel() {
                                     </div>
                                     <div>
                                         <label className={labelCls}>Product Thumbnail</label>
-                                        <div className="aspect-[3/4] bg-[var(--bg3)] border-2 border-dashed border-[var(--border-subtle)] relative overflow-hidden group">
+                                        <div className="aspect-[3/4] crystal-card rounded-xl border-2 border-dashed relative overflow-hidden group" style={{ borderColor: 'var(--crystal-border)' }}>
                                             {productForm.imageUrl
                                                 ? <img src={productForm.imageUrl} alt="" className="w-full h-full object-cover" /> // eslint-disable-line @next/next/no-img-element
                                                 : <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--muted)] uppercase tracking-widest text-[9px] font-bold"><ImageIcon className="w-10 h-10 mb-2 opacity-20" /> Select Media</div>
@@ -869,12 +814,12 @@ export default function AdminPanel() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-8">
-                                    <div className="flex items-center gap-3 p-4 bg-[var(--bg3)] border border-[var(--border-subtle)]">
+                                    <div className="crystal-card flex items-center gap-3 p-4 rounded-xl">
                                         <input type="checkbox" checked={productForm.isFeatured} onChange={e => setProductForm(p => ({ ...p, isFeatured: e.target.checked }))} className="w-4 h-4 accent-[var(--gold)]" />
-                                        <span className="text-[10px] uppercase font-bold tracking-widest text-[var(--fg)]">Featured Product</span>
+                                        <span className="text-[10px] uppercase font-bold tracking-widest" style={{ color: 'var(--crystal-text)' }}>Featured Product</span>
                                     </div>
-                                    <div className="flex items-center gap-3 p-4 bg-[var(--bg3)] border border-[var(--border-subtle)]">
-                                        <select value={productForm.status} onChange={e => setProductForm(p => ({ ...p, status: e.target.value as any }))} className="bg-transparent text-[10px] uppercase font-bold tracking-widest text-[var(--fg)] outline-none border-none w-full">
+                                    <div className="crystal-card flex items-center gap-3 p-4 rounded-xl">
+                                        <select value={productForm.status} onChange={e => setProductForm(p => ({ ...p, status: e.target.value as any }))} className="text-[10px] uppercase font-bold tracking-widest outline-none border-none w-full" style={{ background: 'transparent', color: 'var(--crystal-text)' }}>
                                             <option>In Stock</option>
                                             <option>Out of Stock</option>
                                         </select>
