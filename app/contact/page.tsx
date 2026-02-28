@@ -44,7 +44,7 @@ export default function Contact() {
 
             const data = await res.json();
             if (data.success) {
-                setStatus({ type: 'success', message: 'Transmission Successful. We will connect soon.' });
+                setStatus({ type: 'success', message: 'we have recived your message thanku' });
                 setFormData({ name: '', email: '', subject: '', message: '' });
             } else {
                 setStatus({ type: 'error', message: data.error || 'Transmission Failed. Secure line interrupted.' });

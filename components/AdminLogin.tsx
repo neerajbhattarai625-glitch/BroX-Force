@@ -91,8 +91,11 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
     return (
         <div
-            className="min-h-[100dvh] w-full flex items-center justify-center p-4 relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, var(--admin-bg-start) 0%, var(--admin-bg-mid) 50%, var(--admin-bg-end) 100%)' }}
+            className="fixed inset-0 w-full flex items-center justify-center p-4 overflow-hidden"
+            style={{
+                background: 'linear-gradient(135deg, var(--admin-bg-start) 0%, var(--admin-bg-mid) 50%, var(--admin-bg-end) 100%)',
+                zIndex: 50
+            }}
         >
             {/* Animated background */}
             <div className="absolute inset-0 pointer-events-none">
@@ -116,9 +119,9 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
             {/* Card */}
             <motion.div
-                initial={{ opacity: 0, y: 32, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.65, ease: [0.25, 0.46, 0.45, 0.94] }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
                 className={`relative z-10 w-full max-w-sm ${shaking ? 'animate-[wiggle_0.2s_ease-in-out_3]' : ''}`}
             >
                 <div
