@@ -178,7 +178,7 @@ export default function AdminPanel() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 lg:ml-64 p-6 lg:p-10 bg-[var(--bg)] min-h-screen">
+            <main className="flex-1 lg:ml-64 p-4 md:p-6 lg:p-10 bg-[var(--bg)] min-h-screen w-full min-w-0 max-w-[100vw] overflow-x-hidden">
 
                 {/* Mobile Header (Simplified) */}
                 <div className="lg:hidden flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-subtle)] overflow-x-auto gap-4 no-scrollbar">
@@ -260,9 +260,9 @@ export default function AdminPanel() {
 
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                     {/* Recent Activity */}
-                                    <div className="lg:col-span-2 bg-[var(--card)] border border-[var(--border-subtle)] p-8">
+                                    <div className="lg:col-span-2 bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8">
                                         <div className="flex items-center justify-between mb-8">
-                                            <h3 className="font-heading text-2xl text-[var(--fg)]">Recent Transactions</h3>
+                                            <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)]">Recent Transactions</h3>
                                             <button onClick={() => setActiveTab("orders")} className="text-[9px] uppercase tracking-[0.3em] text-[var(--gold)] font-bold hover:text-white transition-colors">View All</button>
                                         </div>
                                         <div className="space-y-4">
@@ -292,8 +292,8 @@ export default function AdminPanel() {
                                     </div>
 
                                     {/* Stock Alerts */}
-                                    <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
-                                        <h3 className="font-heading text-2xl text-[var(--fg)] mb-8 flex items-center gap-2">
+                                    <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8">
+                                        <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)] mb-8 flex items-center gap-2">
                                             Inventory <span className="bg-red-500/10 text-red-400 text-[10px] px-2 py-0.5 border border-red-500/20">{metrics.stockAlerts}</span>
                                         </h3>
                                         <div className="space-y-4">
@@ -563,9 +563,9 @@ export default function AdminPanel() {
 
                         {/* 5. COUPONS */}
                         {activeTab === "coupons" && (
-                            <motion.div key="coup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                                <div className="lg:col-span-4 bg-[var(--card)] border border-[var(--border-subtle)] p-8 h-fit">
-                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Create Coupon</h3>
+                            <motion.div key="coup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
+                                <div className="lg:col-span-4 bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8 h-fit">
+                                    <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)] mb-8">Create Coupon</h3>
                                     <form onSubmit={(e) => {
                                         e.preventDefault();
                                         const d = new FormData(e.currentTarget);
@@ -580,8 +580,8 @@ export default function AdminPanel() {
                                         <button type="submit" className={btnCls + " w-full"}>Issue Coupon</button>
                                     </form>
                                 </div>
-                                <div className="lg:col-span-8 bg-[var(--card)] border border-[var(--border-subtle)] p-8">
-                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Active Vouchers</h3>
+                                <div className="lg:col-span-8 bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8">
+                                    <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)] mb-8">Active Vouchers</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {vouchers.map((v, i) => (
                                             <div key={i} className="p-6 bg-[var(--bg2)] border border-[var(--border-subtle)] relative overflow-hidden group">
@@ -622,16 +622,16 @@ export default function AdminPanel() {
 
                         {/* 6. CATEGORIES */}
                         {activeTab === "categories" && (
-                            <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl space-y-8">
-                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-8">
-                                    <h3 className="font-heading text-2xl text-[var(--fg)] mb-8">Category Management</h3>
+                            <motion.div key="cat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl space-y-8" style={{ maxWidth: '100vw' }}>
+                                <div className="bg-[var(--card)] border border-[var(--border-subtle)] p-4 sm:p-6 lg:p-8">
+                                    <h3 className="font-heading text-xl md:text-2xl text-[var(--fg)] mb-8">Category Management</h3>
 
-                                    <div className="flex gap-4 mb-10">
+                                    <div className="flex flex-col sm:flex-row gap-4 mb-10 w-full">
                                         <input
                                             id="new-category-input"
                                             type="text"
                                             placeholder="Enter category name..."
-                                            className={inputCls + " flex-1"}
+                                            className={inputCls + " flex-1 w-full"}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     const val = (e.target as HTMLInputElement).value;
@@ -652,7 +652,7 @@ export default function AdminPanel() {
                                                     flash("Category added!");
                                                 }
                                             }}
-                                            className={btnCls}
+                                            className={btnCls + " w-full sm:w-auto"}
                                         >
                                             Add Category
                                         </button>
