@@ -8,7 +8,7 @@ export default function Contact() {
     const inputCls = "w-full bg-[var(--bg3)] border border-[var(--border-subtle)] p-4 text-[var(--fg)] text-sm focus:outline-none focus:border-[var(--gold)] transition-all duration-300 placeholder-[var(--muted)]";
     const labelCls = "text-[10px] uppercase font-bold tracking-[0.2em] text-[var(--muted)] mb-2 block";
 
-    const containerVariants = {
+    const containerVariants: any = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
@@ -16,7 +16,7 @@ export default function Contact() {
         }
     };
 
-    const itemVariants = {
+    const itemVariants: any = {
         hidden: { opacity: 0, y: 30 },
         visible: {
             opacity: 1,
