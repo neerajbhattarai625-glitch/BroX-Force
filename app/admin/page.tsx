@@ -147,11 +147,29 @@ export default function AdminPanel() {
 
     return (
         <div className="min-h-screen flex" style={{ background: `linear-gradient(135deg, var(--admin-bg-start) 0%, var(--admin-bg-mid) 50%, var(--admin-bg-end) 100%)` }}>
-            {/* Prism ambient lights */}
+            {/* Ambient lights — theme-aware */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-[0.08]" style={{ background: 'radial-gradient(circle, #c9a84c 0%, #b060ff 40%, transparent 70%)', filter: 'blur(70px)', animation: 'irisShift 12s ease-in-out infinite' }} />
-                <div className="absolute bottom-1/4 right-0 w-80 h-80 rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #40c8ff 0%, #a060ff 50%, transparent 70%)', filter: 'blur(60px)', animation: 'irisShift 8s ease-in-out infinite reverse' }} />
-                <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #ff8040 0%, transparent 70%)', filter: 'blur(50px)' }} />
+                {/* Dark mode orbs */}
+                <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full" style={{ background: 'radial-gradient(circle, #c9a84c 0%, #b060ff 40%, transparent 70%)', filter: 'blur(70px)', animation: 'irisShift 12s ease-in-out infinite', opacity: theme === 'dark' ? 0.08 : 0 }} />
+                <div className="absolute bottom-1/4 right-0 w-80 h-80 rounded-full" style={{ background: 'radial-gradient(circle, #40c8ff 0%, #a060ff 50%, transparent 70%)', filter: 'blur(60px)', animation: 'irisShift 8s ease-in-out infinite reverse', opacity: theme === 'dark' ? 0.07 : 0 }} />
+                <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full" style={{ background: 'radial-gradient(circle, #ff8040 0%, transparent 70%)', filter: 'blur(50px)', opacity: theme === 'dark' ? 0.04 : 0 }} />
+
+                {/* Light mode orbs — vivid and solid */}
+                <div className="admin-orb absolute -top-20 -left-20 w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(251,113,133,0.45) 0%, rgba(216,180,254,0.3) 50%, transparent 80%)', filter: 'blur(60px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '10s', '--orb-delay': '0s' } as React.CSSProperties} />
+                <div className="admin-orb absolute top-1/3 -right-20 w-[420px] h-[420px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(56,189,248,0.40) 0%, rgba(139,92,246,0.25) 55%, transparent 80%)', filter: 'blur(55px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '13s', '--orb-delay': '1s' } as React.CSSProperties} />
+                <div className="admin-orb absolute -bottom-10 left-1/3 w-[380px] h-[380px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.35) 0%, rgba(99,102,241,0.25) 55%, transparent 80%)', filter: 'blur(50px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '11s', '--orb-delay': '2s' } as React.CSSProperties} />
+                <div className="admin-orb absolute top-2/3 left-1/4 w-[300px] h-[300px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.38) 0%, rgba(244,63,94,0.2) 55%, transparent 80%)', filter: 'blur(45px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '9s', '--orb-delay': '0.5s' } as React.CSSProperties} />
+                <div className="admin-orb absolute top-10 right-1/3 w-[260px] h-[260px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.42) 0%, rgba(236,72,153,0.22) 55%, transparent 80%)', filter: 'blur(40px)', opacity: theme === 'light' ? 1 : 0, '--orb-dur': '14s', '--orb-delay': '1.5s' } as React.CSSProperties} />
+
+                {/* Light mode: subtle dot-grid overlay */}
+                {theme === 'light' && (
+                    <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle, rgba(124,58,237,0.12) 1px, transparent 1px)', backgroundSize: '40px 40px', opacity: 0.6 }} />
+                )}
+
+                {/* Light mode: diagonal iridescent sweep */}
+                {theme === 'light' && (
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.04) 0%, transparent 30%, rgba(56,189,248,0.05) 60%, transparent 80%, rgba(251,191,36,0.04) 100%)', animation: 'crystalShimmer 10s ease-in-out infinite', backgroundSize: '200% 200%' }} />
+                )}
             </div>
 
             {/* Sidebar */}

@@ -177,18 +177,23 @@ html.lenis body {
 }
 
 [data-theme="light"] {
-  --crystal-bg: rgba(255, 255, 255, 0.55);
-  --crystal-border: rgba(180, 150, 255, 0.25);
-  --crystal-shine: rgba(255, 255, 255, 0.7);
-  --crystal-text: rgba(20, 20, 40, 0.92);
-  --crystal-muted: rgba(60, 60, 100, 0.5);
-  --crystal-shadow: rgba(100, 80, 200, 0.12);
-  --crystal-prism1: rgba(160, 80, 255, 0.08);
-  --crystal-prism2: rgba(40, 160, 255, 0.07);
-  --crystal-prism3: rgba(255, 140, 60, 0.06);
-  --admin-bg-start: #e8e8f8;
-  --admin-bg-mid: #eeeeff;
-  --admin-bg-end: #f0edf8;
+  /* Vivid blush → sky → lavender gradient background */
+  --admin-bg-start: #fce7f3;
+  --admin-bg-mid: #ede9fe;
+  --admin-bg-end: #dbeafe;
+
+  /* Bright white glass surface */
+  --crystal-bg: rgba(255, 255, 255, 0.72);
+  --crystal-border: rgba(139, 92, 246, 0.28);
+  --crystal-shine: rgba(255, 255, 255, 0.92);
+  --crystal-text: rgba(15, 10, 40, 0.92);
+  --crystal-muted: rgba(80, 60, 130, 0.62);
+  --crystal-shadow: rgba(124, 58, 237, 0.14);
+
+  /* Vivid prism overlays - rose, sky, gold */
+  --crystal-prism1: rgba(244, 63, 94, 0.10);
+  --crystal-prism2: rgba(56, 189, 248, 0.10);
+  --crystal-prism3: rgba(251, 191, 36, 0.09);
 }
 
 /* Prism shimmer animation */
@@ -283,6 +288,27 @@ html.lenis body {
   background-size: 200% 100%;
 }
 
+/* Light mode: vivid coloured edge + inner glow */
+[data-theme="light"] .crystal-card::after {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(244, 63, 94, 0.7) 15%,
+      rgba(139, 92, 246, 0.9) 40%,
+      rgba(56, 189, 248, 0.9) 65%,
+      rgba(251, 191, 36, 0.7) 85%,
+      transparent 100%);
+  height: 2px;
+  animation: crystalShimmer 4s ease-in-out infinite;
+}
+
+[data-theme="light"] .crystal-card {
+  box-shadow:
+    0 8px 32px var(--crystal-shadow),
+    0 2px 8px rgba(139, 92, 246, 0.08),
+    inset 0 1px 0 var(--crystal-shine),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
 .crystal-card>* {
   position: relative;
   z-index: 1;
@@ -307,6 +333,72 @@ html.lenis body {
   box-shadow:
     0 4px 16px var(--crystal-shadow),
     inset 0 1px 0 var(--crystal-shine);
+}
+
+/* Light mode hover — vivid tint */
+[data-theme="light"] .crystal-hover:hover {
+  background: rgba(139, 92, 246, 0.06);
+  box-shadow:
+    0 4px 20px rgba(124, 58, 237, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Light mode background floating orbs */
+@keyframes lightFloat {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  25% {
+    transform: translate(12px, -20px) scale(1.06);
+  }
+
+  50% {
+    transform: translate(-8px, -35px) scale(0.96);
+  }
+
+  75% {
+    transform: translate(16px, -18px) scale(1.04);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes lightPrism {
+  0% {
+    opacity: 0.5;
+    filter: hue-rotate(0deg);
+  }
+
+  33% {
+    opacity: 0.75;
+    filter: hue-rotate(40deg);
+  }
+
+  66% {
+    opacity: 0.55;
+    filter: hue-rotate(-30deg);
+  }
+
+  100% {
+    opacity: 0.5;
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* Light mode admin background orbs */
+[data-theme="light"] .admin-orb {
+  animation: lightFloat var(--orb-dur, 9s) ease-in-out infinite var(--orb-delay, 0s);
+  animation-fill-mode: both;
+}
+
+/* Light mode sidebar */
+[data-theme="light"] .crystal-sidebar {
+  background: rgba(255, 255, 255, 0.8);
+  border-right: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 4px 0 32px rgba(124, 58, 237, 0.1);
 }
 
 /* No scrollbar utility */

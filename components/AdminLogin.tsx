@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Eye, EyeOff, Fingerprint } from 'lucide-react';
 import { useShop } from '@/lib/context/ShopContext';
+import { useTheme } from '@/lib/context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function CrystalOrb({ x, y, size, color, delay, duration }: {
@@ -31,6 +32,8 @@ function Sparkle({ x, y, delay }: { x: string; y: string; delay: number }) {
 
 export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
     const { adminConfig } = useShop();
+    const { theme } = useTheme();
+    const isLight = theme === 'light';
     const [password, setPassword] = useState('');
     const [error, setError] = useState(false);
     const [showPw, setShowPw] = useState(false);
@@ -56,7 +59,14 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
         setLoading(false);
     };
 
-    const orbs = [
+    // Dark mode: subtle jewel orbs; Light mode: vivid daylight prism orbs
+    const orbs = isLight ? [
+        { x: '8%', y: '15%', size: 240, color: 'radial-gradient(circle, rgba(251,113,133,0.55) 0%, rgba(216,180,254,0.35) 55%, transparent 100%)', delay: 0, duration: 8 },
+        { x: '68%', y: '6%', size: 190, color: 'radial-gradient(circle, rgba(56,189,248,0.55) 0%, rgba(139,92,246,0.30) 55%, transparent 100%)', delay: 1, duration: 10 },
+        { x: '78%', y: '55%', size: 200, color: 'radial-gradient(circle, rgba(52,211,153,0.45) 0%, rgba(99,102,241,0.28) 55%, transparent 100%)', delay: 2, duration: 9 },
+        { x: '4%', y: '65%', size: 165, color: 'radial-gradient(circle, rgba(251,191,36,0.50) 0%, rgba(244,63,94,0.28) 55%, transparent 100%)', delay: 1.5, duration: 11 },
+        { x: '40%', y: '80%', size: 145, color: 'radial-gradient(circle, rgba(167,139,250,0.50) 0%, rgba(236,72,153,0.28) 55%, transparent 100%)', delay: 0.5, duration: 7 },
+    ] : [
         { x: '8%', y: '18%', size: 220, color: 'radial-gradient(circle, rgba(201,168,76,0.45) 0%, rgba(160,70,255,0.25) 60%, transparent 100%)', delay: 0, duration: 8 },
         { x: '68%', y: '8%', size: 170, color: 'radial-gradient(circle, rgba(64,200,255,0.45) 0%, rgba(100,50,255,0.25) 60%, transparent 100%)', delay: 1, duration: 10 },
         { x: '78%', y: '58%', size: 190, color: 'radial-gradient(circle, rgba(255,120,60,0.35) 0%, rgba(200,70,255,0.25) 60%, transparent 100%)', delay: 2, duration: 9 },
