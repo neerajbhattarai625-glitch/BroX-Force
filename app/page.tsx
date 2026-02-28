@@ -52,13 +52,13 @@ export default function Home() {
 
         <div ref={heroRef} className="relative z-20 text-center px-6 max-w-4xl mx-auto">
           <div data-hero className="inline-flex items-center gap-3 mb-10 opacity-0">
-            <span className="h-px w-8 bg-[var(--gold-hero)]" />
-            <span className="text-[10px] tracking-[0.35em] uppercase text-[var(--gold-hero)] font-semibold">Premium Streetwear · Est. 2024</span>
-            <span className="h-px w-8 bg-[var(--gold-hero)]" />
+            <span className="h-[1.5px] w-8 bg-gradient-to-r from-transparent to-[var(--gold)]" />
+            <span className="text-[10px] tracking-[0.35em] uppercase text-[var(--gold)] font-semibold">Premium Streetwear · Est. 2024</span>
+            <span className="h-[1.5px] w-8 bg-gradient-to-l from-transparent to-[var(--silver)]" />
           </div>
 
           <h1 data-hero className="font-heading text-[14vw] sm:text-[11vw] md:text-[9rem] leading-none tracking-tight text-[var(--fg)] opacity-0">
-            BroX<span className="italic text-[var(--gold-hero)]"> Force</span>
+            BroX<span className="italic" style={{ background: 'var(--gold-metallic)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Force</span>
           </h1>
 
           <p data-hero className="mt-8 text-base text-[var(--muted)] font-light max-w-sm mx-auto leading-relaxed opacity-0">

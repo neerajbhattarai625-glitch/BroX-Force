@@ -23,6 +23,20 @@
   --gold-dim: rgba(201, 168, 76, 0.08);
   --gold-text: #d4af37;
   --gold-hero: #c9a84c;
+
+  /* Metallic Highlights */
+  --silver: #a8a8a8;
+  --silver-bright: #e0e0e0;
+  --gold-metallic: linear-gradient(90deg, #c9a84c, #f5e3a8, #c9a84c);
+  --silver-metallic: linear-gradient(90deg, #a8a8a8, #e0e0e0, #a8a8a8);
+  --dual-metallic: linear-gradient(90deg,
+      transparent 0%,
+      #c9a84c 15%,
+      #f5e3a8 30%,
+      #e0e0e0 50%,
+      #a8a8a8 70%,
+      #c9a84c 85%,
+      transparent 100%);
 }
 
 /* ===== LIGHT (Soft Matte) ===== */
@@ -243,7 +257,7 @@ html.lenis body {
   transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Very subtle top edge light line */
+/* Very subtle top edge light line (Dual Metallic Refraction) */
 .crystal-card::after {
   content: '';
   position: absolute;
@@ -251,17 +265,13 @@ html.lenis body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      var(--gold) 25%,
-      rgba(255, 255, 255, 0.3) 50%,
-      var(--gold) 75%,
-      transparent 100%);
-  opacity: 0.1;
+  background: var(--dual-metallic);
+  opacity: 0.15;
 }
 
 [data-theme="light"] .crystal-card::after {
-  opacity: 0.05;
+  opacity: 0.08;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
 
 [data-theme="light"] .crystal-card {
@@ -358,12 +368,26 @@ html.lenis body {
 
 /* Main website: Premium Frosted Glass (Matte Blur) */
 .user-frosted {
+  position: relative;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
   border: 1px solid rgba(255, 255, 255, 0.04);
   transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+/* User Card Dual-Refraction */
+.user-frosted::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--dual-metallic);
+  opacity: 0.12;
 }
 
 [data-theme="light"] .user-frosted {

@@ -193,6 +193,10 @@ export default function AdminPanel() {
                 {/* Extremely Subtle Ambient Gold Glow (Static) */}
                 <div className="absolute top-[-30%] left-[-15%] w-[80%] h-[80%] rounded-full blur-[150px] opacity-[0.08]"
                     style={{ background: 'radial-gradient(circle, var(--gold) 0%, transparent 70%)' }} />
+
+                {/* New: Subtle Ambient Silver Rim Light (Bottom Right) */}
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[130px] opacity-[0.05]"
+                    style={{ background: 'radial-gradient(circle, var(--silver) 0%, transparent 70%)' }} />
             </div>
 
             {/* Sidebar */}
