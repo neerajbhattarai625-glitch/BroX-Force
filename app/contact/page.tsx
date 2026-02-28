@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Instagram, Twitter, Facebook, Mail, MapPin, Phone, Send, Sparkles, ShieldCheck, Globe } from "lucide-react";
 import { motion } from "framer-motion";
+import { useShop } from "@/lib/context/ShopContext";
 
 export default function Contact() {
     const cardCls = "group relative bg-[var(--bg2)] border border-[var(--border-subtle)] p-8 overflow-hidden hover:border-[var(--gold)]/40 transition-all duration-500 hover:shadow-2xl hover:shadow-[var(--gold)]/5";
@@ -30,6 +31,8 @@ export default function Contact() {
     const [submitting, setSubmitting] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
 
+    const { adminConfig } = useShop();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
@@ -39,7 +42,7 @@ export default function Contact() {
             const res = await fetch('/api/contact', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({ ...formData, adminEmail: adminConfig.contactEmail })
             });
 
             const data = await res.json();

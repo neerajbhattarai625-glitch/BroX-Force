@@ -42,7 +42,7 @@ Received at ${new Date().toLocaleString()}
 
         await transporter.sendMail({
             from: `"BroX Contact" <${process.env.SMTP_USER || "broxorders@gmail.com"}>`,
-            to: process.env.SMTP_USER || "broxorders@gmail.com", // Send to self/admin
+            to: body.adminEmail || process.env.SMTP_USER || "broxorders@gmail.com", // Send to configured admin
             replyTo: email,
             subject: `[BroX Contact] ${subject || "New Inquiry"} from ${name}`,
             text: emailBody,

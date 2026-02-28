@@ -32,6 +32,7 @@ export default function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
         if (password === adminConfig.passwordHash) {
             localStorage.setItem('brox_admin_auth', 'true');
+            localStorage.setItem('brox_admin_login_time', Date.now().toString());
             sessionStorage.setItem('brox_admin_auth', 'true');
             onSuccess();
         } else {

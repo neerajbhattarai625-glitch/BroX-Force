@@ -44,15 +44,37 @@ export default function AdminPanel() {
         setTimeout(() => setSuccessMsg(null), 3000);
     };
 
-    // --- PERSISTENCE: CHECK AUTH ON MOUNT ---
+    // --- PERSISTENCE & SESSION TIMEOUT: CHECK AUTH ON MOUNT ---
     useEffect(() => {
-        const isAuthed = localStorage.getItem("brox_admin_auth") === "true" ||
-            sessionStorage.getItem("brox_admin_auth") === "true";
-        if (isAuthed) setAuthed(true);
+        const checkAuth = () => {
+            const isAuthed = localStorage.getItem("brox_admin_auth") === "true" ||
+                sessionStorage.getItem("brox_admin_auth") === "true";
+
+            if (isAuthed) {
+                const loginTime = localStorage.getItem("brox_admin_login_time");
+                if (loginTime) {
+                    const elapsed = Date.now() - parseInt(loginTime);
+                    const threeHours = 3 * 60 * 60 * 1000; // 10,800,000 ms
+
+                    if (elapsed > threeHours) {
+                        logout();
+                        return;
+                    }
+                }
+                setAuthed(true);
+            }
+        };
+
+        checkAuth();
+        // Periodic check every minute
+        const interval = setInterval(checkAuth, 60000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleAuthSuccess = () => {
+        const now = Date.now().toString();
         localStorage.setItem("brox_admin_auth", "true");
+        localStorage.setItem("brox_admin_login_time", now);
         setAuthed(true);
     };
 
@@ -774,6 +796,20 @@ export default function AdminPanel() {
                                                 </button>
                                             </div>
                                         ))}
+                                    </div>
+
+                                    <div className="mt-10 pt-10" style={{ borderTop: '1px solid var(--crystal-border)' }}>
+                                        <h3 className="font-heading text-2xl mb-8 flex items-center gap-3" style={{ color: 'var(--crystal-text)' }}><Mail className="w-6 h-6 text-[var(--gold)]" /> Communication Protocol</h3>
+                                        <div className="space-y-6">
+                                            <div>
+                                                <label className={labelCls}>Order Notification Email</label>
+                                                <input type="email" value={adminConfig.orderEmail} onChange={e => updateAdminConfig({ orderEmail: e.target.value })} className={inputCls} placeholder="Forwarding address for orders" />
+                                            </div>
+                                            <div>
+                                                <label className={labelCls}>Contact Inquiry Email</label>
+                                                <input type="email" value={adminConfig.contactEmail} onChange={e => updateAdminConfig({ contactEmail: e.target.value })} className={inputCls} placeholder="Forwarding address for messages" />
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="mt-10 pt-10" style={{ borderTop: '1px solid var(--crystal-border)' }}>

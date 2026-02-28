@@ -80,7 +80,7 @@ function CheckoutContent() {
                 discount: discountPct,
                 total: total.toFixed(2),
                 paymentMethod: form.paymentMethod,
-                adminEmail: adminConfig.email,
+                adminEmail: adminConfig.orderEmail,
             };
 
             // 1. Send Email (Mocked internal API)

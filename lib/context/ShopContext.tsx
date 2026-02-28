@@ -69,12 +69,14 @@ export type AnalyticsData = {
 };
 
 export type AdminConfig = {
-    email: string;
-    passwordHash: string; // Plain for this mock, normally hashed
+    email: string; // The login/display email
+    orderEmail: string; // Recipient for new orders
+    contactEmail: string; // Recipient for contact form
+    passwordHash: string;
     payments: { esewa: boolean; khalti: boolean; stripe: boolean; cod: boolean; paypal: boolean };
     shippingCost: number;
     freeShippingThreshold: number;
-    exchangeRate: number; // NPR per 1 USD
+    exchangeRate: number;
 };
 
 const DEFAULT_THEME: ThemeImages = {
@@ -180,6 +182,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     const [analytics, setAnalytics] = useState<AnalyticsData>({ uniqueVisitors: 0, totalPageHits: 0, revenueNPR: 0, revenueUSD: 0, profitNPR: 0, profitUSD: 0 });
     const [adminConfig, setAdminConfig] = useState<AdminConfig>({
         email: "codevengers8848@gmail.com",
+        orderEmail: "codevengers8848@gmail.com",
+        contactEmail: "codevengers8848@gmail.com",
         passwordHash: "brox@admin2024",
         payments: { esewa: true, khalti: true, stripe: false, cod: true, paypal: true },
         shippingCost: 5,
