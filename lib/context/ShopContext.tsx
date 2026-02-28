@@ -423,17 +423,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
             setOrders(prev => [newOrder, ...prev]);
 
-            setAnalytics(prev => {
-                const revNPR = newOrder.paymentCurrency === "NPR" ? parseFloat(newOrder.total) : parseFloat(newOrder.total) * adminConfig.exchangeRate;
-                const revUSD = newOrder.paymentCurrency === "USD" ? parseFloat(newOrder.total) : parseFloat(newOrder.total) / adminConfig.exchangeRate;
-                const updated = {
-                    ...prev,
-                    revenueNPR: prev.revenueNPR + revNPR,
-                    revenueUSD: prev.revenueUSD + revUSD
-                };
-                save("analytics", updated);
-                return updated;
-            });
+            // Analytics logic moved to updateOrderStatus (only when marked as Shipped)
 
             // Updating customers can still be local for now or eventually moved to API
             setCustomers(prev => {
@@ -453,21 +443,31 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         }
     }, [adminConfig.exchangeRate]);
 
-    const updateOrderStatus = useCallback(async (id: string, status: OrderStatus) => {
+    const updateOrderStatus = useCallback(async (id: string, newStatus: OrderStatus) => {
         const order = orders.find(o => o.id === id);
         if (!order) return;
+
+        const oldStatus = order.status;
+        const oldIsStockReduced = order.isStockReduced;
+
+        let newIsStockReduced = oldIsStockReduced;
+        if (newStatus === "Shipped" || newStatus === "Delivered") {
+            newIsStockReduced = true;
+        } else if (newStatus === "Cancelled") {
+            newIsStockReduced = false;
+        }
 
         try {
             const res = await fetch(`/api/orders/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status, isStockReduced: (status === "Shipped" || order.isStockReduced) ? true : false })
+                body: JSON.stringify({ status: newStatus, isStockReduced: newIsStockReduced })
             });
 
             if (res.ok) {
-                setOrders(prev => prev.map(o => o.id === id ? { ...o, status, isStockReduced: (status === "Shipped" || order.isStockReduced) ? true : false } : o));
+                setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus, isStockReduced: newIsStockReduced } : o));
 
-                if (order.appliedVoucher && (status === "Shipped" || status === "Delivered")) {
+                if (order.appliedVoucher && (newStatus === "Shipped" || newStatus === "Delivered")) {
                     setVouchers(vv => {
                         const next = vv.map(v => v.code === order.appliedVoucher ? { ...v, isActive: false } : v);
                         save("vouchers", next);
@@ -475,7 +475,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
                     });
                 }
 
-                if (status === "Shipped" && !order.isStockReduced) {
+                // --- Stock Management ---
+                if (!oldIsStockReduced && newIsStockReduced) {
                     setProducts(currentProducts => {
                         const updatedProducts = currentProducts.map(p => {
                             const item = order.items.find(i => i.title === p.title);
@@ -488,12 +489,55 @@ export function ShopProvider({ children }: { children: ReactNode }) {
                         save("products", updatedProducts);
                         return updatedProducts;
                     });
+                } else if (oldIsStockReduced && !newIsStockReduced) {
+                    setProducts(currentProducts => {
+                        const updatedProducts = currentProducts.map(p => {
+                            const item = order.items.find(i => i.title === p.title);
+                            if (item) {
+                                const newStock = p.stock + item.quantity;
+                                return { ...p, stock: newStock, status: newStock > 0 ? "In Stock" : p.status } as Product;
+                            }
+                            return p;
+                        });
+                        save("products", updatedProducts);
+                        return updatedProducts;
+                    });
+                }
+
+                // --- Revenue Management ---
+                const wasRevenueCounted = oldStatus === "Shipped" || oldStatus === "Delivered";
+                const isRevenueCounted = newStatus === "Shipped" || newStatus === "Delivered";
+
+                if (!wasRevenueCounted && isRevenueCounted) {
+                    setAnalytics(prev => {
+                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : parseFloat(order.total) * adminConfig.exchangeRate;
+                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : parseFloat(order.total) / adminConfig.exchangeRate;
+                        const updated = {
+                            ...prev,
+                            revenueNPR: prev.revenueNPR + revNPR,
+                            revenueUSD: prev.revenueUSD + revUSD
+                        };
+                        save("analytics", updated);
+                        return updated;
+                    });
+                } else if (wasRevenueCounted && !isRevenueCounted && newStatus === "Cancelled") {
+                    setAnalytics(prev => {
+                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : parseFloat(order.total) * adminConfig.exchangeRate;
+                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : parseFloat(order.total) / adminConfig.exchangeRate;
+                        const updated = {
+                            ...prev,
+                            revenueNPR: Math.max(0, prev.revenueNPR - revNPR),
+                            revenueUSD: Math.max(0, prev.revenueUSD - revUSD)
+                        };
+                        save("analytics", updated);
+                        return updated;
+                    });
                 }
             }
         } catch (error) {
             console.error("Failed to update order status", error);
         }
-    }, [orders]);
+    }, [orders, adminConfig.exchangeRate]);
 
     const updatePaymentStatus = useCallback(async (id: string, status: PaymentStatus) => {
         try {
