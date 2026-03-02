@@ -179,7 +179,14 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     const [theme, setTheme] = useState<ThemeImages>(DEFAULT_THEME);
     const [orders, setOrders] = useState<Order[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
-    const [analytics, setAnalytics] = useState<AnalyticsData>({ uniqueVisitors: 0, totalPageHits: 0, revenueNPR: 0, revenueUSD: 0, profitNPR: 0, profitUSD: 0 });
+    const [analytics, setAnalytics] = useState<AnalyticsData>({
+        uniqueVisitors: 0,
+        totalPageHits: 0,
+        revenueNPR: 0,
+        revenueUSD: 0,
+        profitNPR: 0,
+        profitUSD: 0
+    });
     const [adminConfig, setAdminConfig] = useState<AdminConfig>({
         email: "codevengers8848@gmail.com",
         orderEmail: "codevengers8848@gmail.com",
@@ -218,38 +225,88 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         try {
             const sp = localStorage.getItem("brox_products");
             const rawProducts = sp ? JSON.parse(sp) : DEFAULT_PRODUCTS;
-            const sanitizedProducts = rawProducts.map((p: any) => ({
+            const sanitizedProducts = Array.isArray(rawProducts) ? rawProducts.map((p: any) => ({
                 ...p,
                 sizes: Array.isArray(p.sizes) ? p.sizes : [],
                 colors: Array.isArray(p.colors) ? p.colors : [],
-                stock: typeof p.stock === 'number' ? p.stock : 0,
+                stock: typeof p.stock === 'number' ? p.stock : (parseInt(p.stock) || 0),
                 status: p.status || "In Stock",
-                isFeatured: !!p.isFeatured
-            }));
+                isFeatured: !!p.isFeatured,
+                price: p.price || "0.00",
+                costPrice: p.costPrice || "0.00"
+            })) : DEFAULT_PRODUCTS;
             setProducts(sanitizedProducts);
 
             const sv = localStorage.getItem("brox_vouchers");
-            setVouchers(sv ? JSON.parse(sv) : [
-                { code: "BROX20", discountPercentage: 20, isUsed: false, usageCount: 0 },
-                { code: "LAUNCH10", discountPercentage: 10, isUsed: false, usageCount: 0 },
-            ]);
+            const rawVouchers = sv ? JSON.parse(sv) : [
+                { code: "BROX20", discountPercentage: 20, isUsed: false, usageCount: 0, isActive: true },
+                { code: "LAUNCH10", discountPercentage: 10, isUsed: false, usageCount: 0, isActive: true },
+            ];
+            setVouchers(Array.isArray(rawVouchers) ? rawVouchers.map((v: any) => ({
+                ...v,
+                code: (v.code || "").toUpperCase(),
+                isActive: v.isActive !== false,
+                usageCount: typeof v.usageCount === 'number' ? v.usageCount : 0
+            })) : []);
 
             const st = localStorage.getItem("brox_theme");
-            if (st) setTheme(JSON.parse(st));
+            if (st) {
+                const parsedTheme = JSON.parse(st);
+                setTheme({ ...DEFAULT_THEME, ...parsedTheme });
+            }
 
             // Orders are now loaded from the API
-            fetch('/api/orders').then(res => res.json()).then(data => {
-                if (Array.isArray(data)) setOrders(data);
-            }).catch(console.error);
+            fetch('/api/orders')
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        setOrders(data.map((o: any) => ({
+                            ...o,
+                            total: o.total || "0.00",
+                            status: o.status || "Pending",
+                            paymentStatus: o.paymentStatus || "Unpaid",
+                            items: Array.isArray(o.items) ? o.items : []
+                        })));
+                    }
+                })
+                .catch(err => console.error("Failed to load orders", err));
 
             const sc = localStorage.getItem("brox_customers");
-            if (sc) setCustomers(JSON.parse(sc));
+            if (sc) {
+                const parsedCustomers = JSON.parse(sc);
+                if (Array.isArray(parsedCustomers)) {
+                    setCustomers(parsedCustomers.map((c: any) => ({
+                        ...c,
+                        orderHistory: Array.isArray(c.orderHistory) ? c.orderHistory : [],
+                        totalSpent: typeof c.totalSpent === 'number' ? c.totalSpent : 0
+                    })));
+                }
+            }
 
             const sa = localStorage.getItem("brox_analytics");
-            if (sa) setAnalytics(JSON.parse(sa));
+            if (sa) {
+                const parsedAnalytics = JSON.parse(sa);
+                setAnalytics(prev => ({
+                    ...prev,
+                    ...parsedAnalytics,
+                    uniqueVisitors: Number(parsedAnalytics.uniqueVisitors) || 0,
+                    totalPageHits: Number(parsedAnalytics.totalPageHits) || 0,
+                    revenueNPR: Number(parsedAnalytics.revenueNPR) || 0,
+                    revenueUSD: Number(parsedAnalytics.revenueUSD) || 0,
+                    profitNPR: Number(parsedAnalytics.profitNPR) || 0,
+                    profitUSD: Number(parsedAnalytics.profitUSD) || 0
+                }));
+            }
 
             const cfg = localStorage.getItem("brox_admin_config");
-            if (cfg) setAdminConfig(JSON.parse(cfg));
+            if (cfg) {
+                const parsedCfg = JSON.parse(cfg);
+                setAdminConfig(prev => ({
+                    ...prev,
+                    ...parsedCfg,
+                    payments: { ...prev.payments, ...(parsedCfg.payments || {}) }
+                }));
+            }
         } catch (e) {
             console.error("Hydration failed", e);
         }

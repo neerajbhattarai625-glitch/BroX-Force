@@ -80,19 +80,25 @@ export default function AdminPanel() {
 
     // --- DASHBOARD METRICS ---
     const metrics = useMemo(() => {
-        const pendingOrders = orders.filter(o => o.status === "Pending").length;
+        const safeOrders = orders || [];
+        const safeCustomers = customers || [];
+        const safeProducts = products || [];
+        const safeAnalytics = analytics || { revenueNPR: 0, revenueUSD: 0, profitNPR: 0, profitUSD: 0, uniqueVisitors: 0, totalPageHits: 0 };
+
+        const pendingOrders = safeOrders.filter(o => o && o.status === "Pending").length;
+
         return {
-            revenueNPR: analytics.revenueNPR.toFixed(2),
-            revenueUSD: analytics.revenueUSD.toFixed(2),
-            profitNPR: analytics.profitNPR.toFixed(2),
-            profitUSD: analytics.profitUSD.toFixed(2),
-            totalOrders: orders.length,
+            revenueNPR: (Number(safeAnalytics.revenueNPR) || 0).toFixed(2),
+            revenueUSD: (Number(safeAnalytics.revenueUSD) || 0).toFixed(2),
+            profitNPR: (Number(safeAnalytics.profitNPR) || 0).toFixed(2),
+            profitUSD: (Number(safeAnalytics.profitUSD) || 0).toFixed(2),
+            totalOrders: safeOrders.length,
             pendingOrders,
-            totalCustomers: customers.length,
-            totalProducts: products.length,
-            stockAlerts: products.filter(p => p.stock < 10).length,
-            uniqueVisitors: analytics.uniqueVisitors,
-            totalPageHits: analytics.totalPageHits
+            totalCustomers: safeCustomers.length,
+            totalProducts: safeProducts.length,
+            stockAlerts: safeProducts.filter(p => p && (p.stock || 0) < 10).length,
+            uniqueVisitors: Number(safeAnalytics.uniqueVisitors) || 0,
+            totalPageHits: Number(safeAnalytics.totalPageHits) || 0
         };
     }, [orders, customers, products, analytics]);
 
@@ -141,17 +147,19 @@ export default function AdminPanel() {
 
     // --- CMS CONTENT ---
     const [cmsForm, setCmsForm] = useState({
-        hero: siteTheme.hero,
-        footer: siteTheme.footer,
-        logo: siteTheme.logo || ""
+        hero: siteTheme?.hero || "",
+        footer: siteTheme?.footer || "",
+        logo: siteTheme?.logo || ""
     });
 
     useEffect(() => {
-        setCmsForm({
-            hero: siteTheme.hero,
-            footer: siteTheme.footer,
-            logo: siteTheme.logo || ""
-        });
+        if (siteTheme) {
+            setCmsForm({
+                hero: siteTheme.hero || "",
+                footer: siteTheme.footer || "",
+                logo: siteTheme.logo || ""
+            });
+        }
     }, [siteTheme]);
 
     const handleCmsSubmit = (e: React.FormEvent) => {
@@ -297,12 +305,12 @@ export default function AdminPanel() {
                         <div className="crystal-card flex items-center gap-6 px-6 py-3 rounded-2xl">
                             <div className="flex flex-col items-center">
                                 <span className="text-[9px] uppercase tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Unique Visitors</span>
-                                <span className="font-mono text-[var(--gold)] font-bold text-lg">{analytics.uniqueVisitors}</span>
+                                <span className="font-mono text-[var(--gold)] font-bold text-lg">{metrics.uniqueVisitors || 0}</span>
                             </div>
                             <div className="w-px h-8" style={{ background: 'var(--crystal-border)' }} />
                             <div className="flex flex-col items-center">
                                 <span className="text-[9px] uppercase tracking-widest" style={{ color: 'var(--crystal-muted)' }}>Total Page Hits</span>
-                                <span className="font-mono text-[var(--gold)] font-bold text-lg">{analytics.totalPageHits}</span>
+                                <span className="font-mono text-[var(--gold)] font-bold text-lg">{metrics.totalPageHits || 0}</span>
                             </div>
                         </div>
                     </div>
@@ -346,11 +354,11 @@ export default function AdminPanel() {
                                                 <div key={order.id} className="crystal-card flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl crystal-hover gap-4">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[var(--gold)] border border-[var(--gold)]/20 text-[10px]" style={{ background: 'rgba(201,168,76,0.1)' }}>
-                                                            {order.customerName.charAt(0)}
+                                                            {(order?.customerName || "?").charAt(0)}
                                                         </div>
                                                         <div>
-                                                            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--crystal-text)' }}>{order.customerName}</p>
-                                                            <p className="text-[9px] font-mono" style={{ color: 'var(--crystal-muted)' }}>{new Date(order.createdAt).toDateString()}</p>
+                                                            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--crystal-text)' }}>{order?.customerName || "Unknown Customer"}</p>
+                                                            <p className="text-[9px] font-mono" style={{ color: 'var(--crystal-muted)' }}>{order?.createdAt ? new Date(order.createdAt).toDateString() : "N/A"}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
@@ -497,8 +505,8 @@ export default function AdminPanel() {
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xs font-mono" style={{ color: 'var(--crystal-muted)' }}>{new Date(o.createdAt).toLocaleString()}</p>
-                                                    <p className="text-xl font-mono font-bold mt-1" style={{ color: 'var(--crystal-text)' }}>${o.total}</p>
+                                                    <p className="text-xs font-mono" style={{ color: 'var(--crystal-muted)' }}>{o?.createdAt ? new Date(o.createdAt).toLocaleString() : "N/A"}</p>
+                                                    <p className="text-xl font-mono font-bold mt-1" style={{ color: 'var(--crystal-text)' }}>${o?.total || "0.00"}</p>
                                                 </div>
                                             </div>
 
