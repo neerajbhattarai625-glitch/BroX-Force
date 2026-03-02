@@ -198,6 +198,12 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         exchangeRate: 135,
     });
 
+    const save = (key: string, val: any) => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`brox_${key}`, JSON.stringify(val));
+        }
+    };
+
     // Real visitor tracker
     useEffect(() => {
         // 1. Identify unique visitor
@@ -367,7 +373,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         return () => window.removeEventListener("storage", handleStorageChange);
     }, []);
 
-    const save = (key: string, val: any) => localStorage.setItem(`brox_${key}`, JSON.stringify(val));
 
     const addProduct = useCallback((data: Omit<Product, "id">) => {
         const p: Product = { ...data, id: `prod_${Date.now()}` };

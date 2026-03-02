@@ -44,6 +44,19 @@ export default function AdminPanel() {
         setTimeout(() => setSuccessMsg(null), 3000);
     };
 
+    const handleAuthSuccess = () => {
+        const now = Date.now().toString();
+        localStorage.setItem("brox_admin_auth", "true");
+        localStorage.setItem("brox_admin_login_time", now);
+        setAuthed(true);
+    };
+
+    const logout = () => {
+        localStorage.removeItem("brox_admin_auth");
+        sessionStorage.removeItem("brox_admin_auth");
+        setAuthed(false);
+    };
+
     // --- PERSISTENCE & SESSION TIMEOUT: CHECK AUTH ON MOUNT ---
     useEffect(() => {
         const checkAuth = () => {
@@ -71,12 +84,6 @@ export default function AdminPanel() {
         return () => clearInterval(interval);
     }, []);
 
-    const handleAuthSuccess = () => {
-        const now = Date.now().toString();
-        localStorage.setItem("brox_admin_auth", "true");
-        localStorage.setItem("brox_admin_login_time", now);
-        setAuthed(true);
-    };
 
     // --- DASHBOARD METRICS ---
     const metrics = useMemo(() => {
@@ -172,11 +179,6 @@ export default function AdminPanel() {
 
     if (!authed) return <AdminLogin onSuccess={handleAuthSuccess} />;
 
-    const logout = () => {
-        localStorage.removeItem("brox_admin_auth");
-        sessionStorage.removeItem("brox_admin_auth");
-        setAuthed(false);
-    };
 
     const menuItems: { id: AdminTab; label: string; icon: any }[] = [
         { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -553,10 +555,10 @@ export default function AdminPanel() {
                                                     {o.appliedVoucher && (<div className="flex items-center gap-2 px-2 py-0.5 rounded-full" style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.3)' }}><Tag className="w-3 h-3 text-[var(--gold)]" /><span className="text-[9px] font-black uppercase tracking-widest text-[var(--gold)]">Voucher: {o.appliedVoucher}</span></div>)}
                                                 </div>
                                                 <div className="space-y-2">
-                                                    {o.items.map((item, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider py-2" style={{ borderBottom: idx < o.items.length - 1 ? '1px solid var(--crystal-border)' : 'none' }}>
-                                                            <div style={{ color: 'var(--crystal-text)' }}>{item.title} <span className="text-[var(--gold)]">x{item.quantity}</span>{item.customSize ? <span className="text-[var(--gold)] ml-2 border border-[var(--gold)]/30 px-1 py-0.5 rounded">Personal: {item.customSize}</span> : item.size && <span className="ml-2" style={{ color: 'var(--crystal-muted)' }}>[{item.size}]</span>}</div>
-                                                            <span className="font-mono" style={{ color: 'var(--crystal-muted)' }}>${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                                                    {(o?.items || []).map((item, idx) => (
+                                                        <div key={idx} className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider py-2" style={{ borderBottom: idx < (o?.items?.length || 0) - 1 ? '1px solid var(--crystal-border)' : 'none' }}>
+                                                            <div style={{ color: 'var(--crystal-text)' }}>{item?.title || "Unknown Item"} <span className="text-[var(--gold)]">x{item?.quantity || 1}</span>{item?.customSize ? <span className="text-[var(--gold)] ml-2 border border-[var(--gold)]/30 px-1 py-0.5 rounded">Personal: {item.customSize}</span> : item?.size && <span className="ml-2" style={{ color: 'var(--crystal-muted)' }}>[{item.size}]</span>}</div>
+                                                            <span className="font-mono" style={{ color: 'var(--crystal-muted)' }}>{(o?.paymentCurrency === "USD" ? "$" : "Rs.")}{((Number(item?.price) || 0) * (Number(item?.quantity) || 1)).toFixed(2)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
