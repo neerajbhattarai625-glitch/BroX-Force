@@ -20,8 +20,9 @@ export default function Price({ amount, className = "", currency }: PriceProps) 
     // If currency prop isn't provided, show NPR by default and USD on hover.
     // If currency prop is provided, show that specifically (e.g. for summaries).
 
-    const npr = numericAmount * (currency === "USD" ? adminConfig.exchangeRate : 1);
-    const usd = numericAmount / (currency === "NPR" || !currency ? adminConfig.exchangeRate : 1);
+    const rate = Number(adminConfig?.exchangeRate) || 135;
+    const npr = numericAmount * (currency === "USD" ? rate : 1);
+    const usd = numericAmount / (currency === "NPR" || !currency ? rate : 1);
 
     const formattedNPR = new Intl.NumberFormat("en-NP", {
         style: "currency",

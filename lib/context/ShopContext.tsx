@@ -257,11 +257,19 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
             // Orders are now loaded from the API
             fetch('/api/orders')
-                .then(res => res.json())
+                .then(async res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    const contentType = res.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new TypeError("Oops, we haven't got JSON!");
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (Array.isArray(data)) {
                         setOrders(data.map((o: any) => ({
                             ...o,
+                            id: o.id || `order_${Math.random()}`,
                             total: o.total || "0.00",
                             status: o.status || "Pending",
                             paymentStatus: o.paymentStatus || "Unpaid",
@@ -269,43 +277,57 @@ export function ShopProvider({ children }: { children: ReactNode }) {
                         })));
                     }
                 })
-                .catch(err => console.error("Failed to load orders", err));
+                .catch(err => console.error("Failed to load orders:", err));
 
             const sc = localStorage.getItem("brox_customers");
             if (sc) {
-                const parsedCustomers = JSON.parse(sc);
-                if (Array.isArray(parsedCustomers)) {
-                    setCustomers(parsedCustomers.map((c: any) => ({
-                        ...c,
-                        orderHistory: Array.isArray(c.orderHistory) ? c.orderHistory : [],
-                        totalSpent: typeof c.totalSpent === 'number' ? c.totalSpent : 0
-                    })));
+                try {
+                    const parsedCustomers = JSON.parse(sc);
+                    if (Array.isArray(parsedCustomers)) {
+                        setCustomers(parsedCustomers.map((c: any) => ({
+                            ...c,
+                            name: c.name || "Unknown Customer",
+                            email: c.email || "N/A",
+                            orderHistory: Array.isArray(c.orderHistory) ? c.orderHistory : [],
+                            totalSpent: typeof c.totalSpent === 'number' ? c.totalSpent : (parseFloat(c.totalSpent) || 0)
+                        })));
+                    }
+                } catch (e) {
+                    console.error("Failed to parse customers", e);
                 }
             }
 
             const sa = localStorage.getItem("brox_analytics");
             if (sa) {
-                const parsedAnalytics = JSON.parse(sa);
-                setAnalytics(prev => ({
-                    ...prev,
-                    ...parsedAnalytics,
-                    uniqueVisitors: Number(parsedAnalytics.uniqueVisitors) || 0,
-                    totalPageHits: Number(parsedAnalytics.totalPageHits) || 0,
-                    revenueNPR: Number(parsedAnalytics.revenueNPR) || 0,
-                    revenueUSD: Number(parsedAnalytics.revenueUSD) || 0,
-                    profitNPR: Number(parsedAnalytics.profitNPR) || 0,
-                    profitUSD: Number(parsedAnalytics.profitUSD) || 0
-                }));
+                try {
+                    const parsedAnalytics = JSON.parse(sa);
+                    setAnalytics(prev => ({
+                        ...prev,
+                        ...parsedAnalytics,
+                        uniqueVisitors: Number(parsedAnalytics.uniqueVisitors) || 0,
+                        totalPageHits: Number(parsedAnalytics.totalPageHits) || 0,
+                        revenueNPR: Number(parsedAnalytics.revenueNPR) || 0,
+                        revenueUSD: Number(parsedAnalytics.revenueUSD) || 0,
+                        profitNPR: Number(parsedAnalytics.profitNPR) || 0,
+                        profitUSD: Number(parsedAnalytics.profitUSD) || 0
+                    }));
+                } catch (e) {
+                    console.error("Failed to parse analytics", e);
+                }
             }
 
             const cfg = localStorage.getItem("brox_admin_config");
             if (cfg) {
-                const parsedCfg = JSON.parse(cfg);
-                setAdminConfig(prev => ({
-                    ...prev,
-                    ...parsedCfg,
-                    payments: { ...prev.payments, ...(parsedCfg.payments || {}) }
-                }));
+                try {
+                    const parsedCfg = JSON.parse(cfg);
+                    setAdminConfig(prev => ({
+                        ...prev,
+                        ...parsedCfg,
+                        payments: { ...prev.payments, ...(parsedCfg.payments || {}) }
+                    }));
+                } catch (e) {
+                    console.error("Failed to parse admin config", e);
+                }
             }
         } catch (e) {
             console.error("Hydration failed", e);

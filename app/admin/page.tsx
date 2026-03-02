@@ -85,20 +85,20 @@ export default function AdminPanel() {
         const safeProducts = products || [];
         const safeAnalytics = analytics || { revenueNPR: 0, revenueUSD: 0, profitNPR: 0, profitUSD: 0, uniqueVisitors: 0, totalPageHits: 0 };
 
-        const pendingOrders = safeOrders.filter(o => o && o.status === "Pending").length;
+        const pendingOrders = safeOrders.filter(o => o?.status === "Pending").length;
 
         return {
-            revenueNPR: (Number(safeAnalytics.revenueNPR) || 0).toFixed(2),
-            revenueUSD: (Number(safeAnalytics.revenueUSD) || 0).toFixed(2),
-            profitNPR: (Number(safeAnalytics.profitNPR) || 0).toFixed(2),
-            profitUSD: (Number(safeAnalytics.profitUSD) || 0).toFixed(2),
+            revenueNPR: (Number(safeAnalytics?.revenueNPR) || 0).toFixed(2),
+            revenueUSD: (Number(safeAnalytics?.revenueUSD) || 0).toFixed(2),
+            profitNPR: (Number(safeAnalytics?.profitNPR) || 0).toFixed(2),
+            profitUSD: (Number(safeAnalytics?.profitUSD) || 0).toFixed(2),
             totalOrders: safeOrders.length,
             pendingOrders,
             totalCustomers: safeCustomers.length,
             totalProducts: safeProducts.length,
-            stockAlerts: safeProducts.filter(p => p && (p.stock || 0) < 10).length,
-            uniqueVisitors: Number(safeAnalytics.uniqueVisitors) || 0,
-            totalPageHits: Number(safeAnalytics.totalPageHits) || 0
+            stockAlerts: safeProducts.filter(p => p && (Number(p.stock) || 0) < 10).length,
+            uniqueVisitors: Number(safeAnalytics?.uniqueVisitors) || 0,
+            totalPageHits: Number(safeAnalytics?.totalPageHits) || 0
         };
     }, [orders, customers, products, analytics]);
 
@@ -350,23 +350,23 @@ export default function AdminPanel() {
                                             <button onClick={() => setActiveTab("orders")} className="text-[9px] uppercase tracking-[0.3em] text-[var(--gold)] font-bold hover:text-white transition-colors">View All</button>
                                         </div>
                                         <div className="space-y-3">
-                                            {orders.slice(0, 5).map(order => (
-                                                <div key={order.id} className="crystal-card flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl crystal-hover gap-4">
+                                            {(orders || []).slice(0, 5).map(order => (
+                                                <div key={order?.id || Math.random()} className="crystal-card flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl crystal-hover gap-4">
                                                     <div className="flex items-center gap-4">
                                                         <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-[var(--gold)] border border-[var(--gold)]/20 text-[10px]" style={{ background: 'rgba(201,168,76,0.1)' }}>
                                                             {(order?.customerName || "?").charAt(0)}
                                                         </div>
                                                         <div>
                                                             <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--crystal-text)' }}>{order?.customerName || "Unknown Customer"}</p>
-                                                            <p className="text-[9px] font-mono" style={{ color: 'var(--crystal-muted)' }}>{order?.createdAt ? new Date(order.createdAt).toDateString() : "N/A"}</p>
+                                                            <p className="text-[10px] font-mono" style={{ color: 'var(--crystal-muted)' }}>{order?.createdAt ? new Date(order.createdAt).toDateString() : "N/A"}</p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
                                                         <p className="font-mono text-sm font-bold" style={{ color: 'var(--crystal-text)' }}>
-                                                            {order.paymentCurrency === "USD" ? `$${order.total}` : `Rs.${order.total}`}
+                                                            {order?.paymentCurrency === "USD" ? `$${order?.total || "0.00"}` : `Rs.${order?.total || "0.00"}`}
                                                         </p>
-                                                        <span className={`text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${order.status === "Delivered" ? "bg-green-500/10 text-green-400 border-green-500/20" : order.status === "Cancelled" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/20"}`}>
-                                                            {order.status}
+                                                        <span className={`text-[8px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${order?.status === "Delivered" ? "bg-green-500/10 text-green-400 border-green-500/20" : order?.status === "Cancelled" ? "bg-red-500/10 text-red-400 border-red-500/20" : "bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)]/20"}`}>
+                                                            {order?.status || "Pending"}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -439,33 +439,34 @@ export default function AdminPanel() {
                                             </tr>
                                         </thead>
                                         <tbody style={{ borderColor: 'var(--crystal-border)' }} className="divide-y divide-[var(--crystal-border)]">
-                                            {products.map(p => (
-                                                <tr key={p.id} className="crystal-hover transition-colors group">
+                                            {(products || []).map(p => (
+                                                <tr key={p?.id || Math.random()} className="crystal-hover transition-colors group">
                                                     <td className="p-4">
                                                         <div className="w-12 h-16 rounded-lg overflow-hidden border" style={{ background: 'var(--crystal-bg)', borderColor: 'var(--crystal-border)' }}>
                                                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                            <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />
+                                                            <img src={p?.imageUrl || ""} alt="" className="w-full h-full object-cover" />
                                                         </div>
                                                     </td>
                                                     <td className="p-4">
-                                                        <p className="font-bold text-xs uppercase tracking-wider mb-1 group-hover:text-[var(--gold)] transition-colors" style={{ color: 'var(--crystal-text)' }}>{p.title}</p>
+                                                        <p className="font-bold text-xs uppercase tracking-wider mb-1 group-hover:text-[var(--gold)] transition-colors" style={{ color: 'var(--crystal-text)' }}>{p?.title || "Unnamed Product"}</p>
                                                         <div className="flex gap-1">
-                                                            {p.isFeatured && <span className="text-[8px] uppercase tracking-tighter px-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded">Featured</span>}
-                                                            <span className={`text-[8px] uppercase tracking-tighter px-1 rounded border ${p.stock > 0 ? "border-green-500/20 text-green-400 bg-green-500/5" : "border-red-500/20 text-red-400 bg-red-500/5"}`}>
-                                                                {p.stock > 0 ? "Available" : "Sold Out"}
+                                                            {p?.isFeatured && <span className="text-[8px] uppercase tracking-tighter px-1 bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded">Featured</span>}
+                                                            <span className={`text-[8px] uppercase tracking-tighter px-1 rounded border ${(Number(p?.stock) || 0) > 0 ? "border-green-500/20 text-green-400 bg-green-500/5" : "border-red-500/20 text-red-400 bg-red-500/5"}`}>
+                                                                {(Number(p?.stock) || 0) > 0 ? "Available" : "Sold Out"}
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-4 text-[11px] uppercase tracking-wider" style={{ color: 'var(--crystal-muted)' }}>{p.category}</td>
-                                                    <td className="p-4 font-mono text-xs" style={{ color: 'var(--crystal-muted)' }}>${p.costPrice}</td>
+                                                    <td className="p-4 text-[11px] uppercase tracking-wider" style={{ color: 'var(--crystal-muted)' }}>{p?.category || "Uncategorized"}</td>
+                                                    <td className="p-4 font-mono text-xs" style={{ color: 'var(--crystal-muted)' }}>${p?.costPrice || "0.00"}</td>
                                                     <td className="p-4">
-                                                        <p className="font-mono text-xs font-bold" style={{ color: 'var(--crystal-text)' }}>${p.price}</p>
-                                                        {p.discountPrice && <p className="font-mono text-[9px] line-through" style={{ color: 'var(--crystal-muted)' }}>${p.discountPrice}</p>}
+                                                        <p className="font-mono text-xs font-bold" style={{ color: 'var(--crystal-text)' }}>${p?.price || "0.00"}</p>
+                                                        {p?.discountPrice && <p className="font-mono text-[9px] line-through" style={{ color: 'var(--crystal-muted)' }}>${p.discountPrice}</p>}
                                                     </td>
-                                                    <td className={`p-4 font-mono text-xs font-bold ${p.stock < 15 ? "text-red-400" : ""}`} style={p.stock >= 15 ? { color: 'var(--crystal-text)' } : {}}>{p.stock}</td>
+                                                    <td className={`p-4 font-mono text-xs font-bold ${(Number(p?.stock) || 0) < 15 ? "text-red-400" : ""}`} style={(Number(p?.stock) || 0) >= 15 ? { color: 'var(--crystal-text)' } : {}}>{p?.stock ?? 0}</td>
                                                     <td className="p-4">
                                                         <div className="flex gap-2">
                                                             <button onClick={() => {
+                                                                if (!p) return;
                                                                 setEditingProduct(p);
                                                                 setProductForm({
                                                                     ...p,
@@ -478,7 +479,7 @@ export default function AdminPanel() {
                                                             }} className="p-2 crystal-card crystal-hover rounded-lg transition-colors" style={{ color: 'var(--crystal-muted)' }}>
                                                                 <Edit3 className="w-4 h-4" />
                                                             </button>
-                                                            <button onClick={() => { if (confirm("Delete product?")) deleteProduct(p.id); }} className="p-2 bg-red-500/5 text-red-400/60 hover:text-red-400 border border-red-500/10 transition-colors rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                                                            <button onClick={() => { if (p && confirm("Delete product?")) deleteProduct(p.id); }} className="p-2 bg-red-500/5 text-red-400/60 hover:text-red-400 border border-red-500/10 transition-colors rounded-lg"><Trash2 className="w-4 h-4" /></button>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -498,10 +499,10 @@ export default function AdminPanel() {
                                         <div className="flex-1 space-y-6">
                                             <div className="flex items-start justify-between pb-4" style={{ borderBottom: '1px solid var(--crystal-border)' }}>
                                                 <div>
-                                                    <p className="text-[10px] uppercase tracking-widest text-[var(--gold)] font-bold mb-1">Order Ref: {o.id.split('_')[1]}</p>
+                                                    <p className="text-[10px] uppercase tracking-widest text-[var(--gold)] font-bold mb-1">Order Ref: {o?.id?.split('_')?.[1] || o?.id || "N/A"}</p>
                                                     <div className="flex items-center gap-3 flex-wrap">
-                                                        <h3 className="font-heading text-2xl" style={{ color: 'var(--crystal-text)' }}>{o.customerName}</h3>
-                                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border ${o.status === "Delivered" ? "border-green-500/30 text-green-400 bg-green-500/10" : o.status === "Cancelled" ? "border-red-500/30 text-red-400 bg-red-500/10" : "border-[var(--gold)]/30 text-[var(--gold)] bg-[var(--gold)]/10"}`}>{o.status}</span>
+                                                        <h3 className="font-heading text-2xl" style={{ color: 'var(--crystal-text)' }}>{o?.customerName || "Unknown Customer"}</h3>
+                                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border ${o?.status === "Delivered" ? "border-green-500/30 text-green-400 bg-green-500/10" : o?.status === "Cancelled" ? "border-red-500/30 text-red-400 bg-red-500/10" : "border-[var(--gold)]/30 text-[var(--gold)] bg-[var(--gold)]/10"}`}>{o?.status || "Pending"}</span>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
@@ -514,9 +515,9 @@ export default function AdminPanel() {
                                                 <div className="space-y-3">
                                                     <h4 className="text-[9px] uppercase tracking-widest font-bold pb-2" style={{ color: 'var(--crystal-muted)', borderBottom: '1px solid var(--crystal-border)' }}>Shipping Info</h4>
                                                     <div className="space-y-2 text-[11px] leading-relaxed font-medium" style={{ color: 'var(--crystal-muted)' }}>
-                                                        <p className="flex items-center gap-3"><Phone className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerPhone}</p>
-                                                        <p className="flex items-center gap-3"><Mail className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerEmail}</p>
-                                                        <p className="flex items-center gap-3"><MapPin className="w-3.5 h-3.5 text-[var(--gold)]" /> {o.customerLocation}</p>
+                                                        <p className="flex items-center gap-3"><Phone className="w-3.5 h-3.5 text-[var(--gold)]" /> {o?.customerPhone || "N/A"}</p>
+                                                        <p className="flex items-center gap-3"><Mail className="w-3.5 h-3.5 text-[var(--gold)]" /> {o?.customerEmail || "N/A"}</p>
+                                                        <p className="flex items-center gap-3"><MapPin className="w-3.5 h-3.5 text-[var(--gold)]" /> {o?.customerLocation || "N/A"}</p>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-3">
@@ -582,24 +583,24 @@ export default function AdminPanel() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y" style={{ borderColor: 'var(--crystal-border)' }}>
-                                            {customers.map(c => (
-                                                <tr key={c.id} className="crystal-hover transition-all">
+                                            {(customers || []).map(c => (
+                                                <tr key={c?.id || Math.random()} className="crystal-hover transition-all">
                                                     <td className="p-5">
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${c.isBlocked ? "bg-red-500/15 text-red-400" : "text-[var(--gold)]"}`} style={!c.isBlocked ? { background: 'rgba(201,168,76,0.12)' } : {}}>{c.name.charAt(0)}</div>
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${c?.isBlocked ? "bg-red-500/15 text-red-400" : "text-[var(--gold)]"}`} style={!c?.isBlocked ? { background: 'rgba(201,168,76,0.12)' } : {}}>{(c?.name || "?").charAt(0)}</div>
                                                             <div>
-                                                                <p className="font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--crystal-text)' }}>{c.name}</p>
-                                                                <span className={`text-[8px] uppercase font-bold ${c.isBlocked ? 'text-red-400' : 'text-green-400'}`}>{c.isBlocked ? 'Blocked' : 'Active'}</span>
+                                                                <p className="font-bold text-xs uppercase tracking-wider" style={{ color: 'var(--crystal-text)' }}>{c?.name || "Unknown Customer"}</p>
+                                                                <span className={`text-[8px] uppercase font-bold ${c?.isBlocked ? 'text-red-400' : 'text-green-400'}`}>{c?.isBlocked ? 'Blocked' : 'Active'}</span>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="p-5">
-                                                        <p className="text-xs font-medium mb-1" style={{ color: 'var(--crystal-muted)' }}>{c.email}</p>
-                                                        <p className="text-xs font-medium" style={{ color: 'var(--crystal-muted)' }}>{c.phone}</p>
+                                                        <p className="text-xs font-medium mb-1" style={{ color: 'var(--crystal-muted)' }}>{c?.email || "N/A"}</p>
+                                                        <p className="text-xs font-medium" style={{ color: 'var(--crystal-muted)' }}>{c?.phone || "N/A"}</p>
                                                     </td>
-                                                    <td className="p-5 text-xs font-mono" style={{ color: 'var(--crystal-text)' }}>{c.orderHistory.length}</td>
-                                                    <td className="p-5 text-sm font-mono text-[var(--gold)] font-bold">${c.totalSpent.toFixed(2)}</td>
-                                                    <td className="p-5">{c.isBlocked ? <button onClick={() => updateCustomer(c.id, { isBlocked: false })} className="text-[10px] uppercase font-bold tracking-widest text-green-400 hover:text-green-300">Unblock</button> : <button onClick={() => updateCustomer(c.id, { isBlocked: true })} className="text-[10px] uppercase font-bold tracking-widest text-red-400/60 hover:text-red-400">Block</button>}</td>
+                                                    <td className="p-5 text-xs font-mono" style={{ color: 'var(--crystal-text)' }}>{c?.orderHistory?.length || 0}</td>
+                                                    <td className="p-5 text-sm font-mono text-[var(--gold)] font-bold">${(Number(c?.totalSpent) || 0).toFixed(2)}</td>
+                                                    <td className="p-5">{c?.isBlocked ? <button onClick={() => c && updateCustomer(c.id, { isBlocked: false })} className="text-[10px] uppercase font-bold tracking-widest text-green-400 hover:text-green-300">Unblock</button> : <button onClick={() => c && updateCustomer(c.id, { isBlocked: true })} className="text-[10px] uppercase font-bold tracking-widest text-red-400/60 hover:text-red-400">Block</button>}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -630,21 +631,21 @@ export default function AdminPanel() {
                                 <div className="lg:col-span-8 crystal-card rounded-2xl p-4 sm:p-6 lg:p-8">
                                     <h3 className="font-heading text-xl md:text-2xl mb-8" style={{ color: 'var(--crystal-text)' }}>Active Vouchers</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        {vouchers.map((v, i) => (
-                                            <div key={i} className="crystal-card rounded-xl p-6 relative overflow-hidden group">
+                                        {(vouchers || []).map((v, i) => (
+                                            <div key={v?.code || i} className="crystal-card rounded-xl p-6 relative overflow-hidden group">
                                                 <div className="absolute -right-4 -top-4 w-12 h-12 rotate-45" style={{ background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.2)' }} />
-                                                <p className="font-mono text-xl font-black text-[var(--gold)] mb-1 tracking-tighter">{v.code}</p>
-                                                <p className="text-[10px] uppercase font-bold mb-4" style={{ color: 'var(--crystal-muted)' }}>{v.discountPercentage}% OFF</p>
+                                                <p className="font-mono text-xl font-black text-[var(--gold)] mb-1 tracking-tighter">{v?.code || "N/A"}</p>
+                                                <p className="text-[10px] uppercase font-bold mb-4" style={{ color: 'var(--crystal-muted)' }}>{v?.discountPercentage || 0}% OFF</p>
                                                 <div className="flex items-center justify-between text-[10px] uppercase tracking-widest font-bold" style={{ color: 'var(--crystal-muted)' }}>
-                                                    <span>Uses: {v.usageCount} / {v.usageLimit || '∞'}</span>
+                                                    <span>Uses: {v?.usageCount || 0} / {v?.usageLimit || '∞'}</span>
                                                     <div className="flex items-center gap-3">
-                                                        <span className={v.isActive ? 'text-green-400' : 'text-red-400'}>{v.isActive ? 'Active' : 'Inactive'}</span>
-                                                        <span className={new Date(v.expiryDate || '2099') < new Date() ? 'text-red-400' : ''}>{v.expiryDate ? new Date(v.expiryDate).toLocaleDateString() : '∞'}</span>
+                                                        <span className={v?.isActive ? 'text-green-400' : 'text-red-400'}>{v?.isActive ? 'Active' : 'Inactive'}</span>
+                                                        <span className={v?.expiryDate && new Date(v.expiryDate || '2099') < new Date() ? 'text-red-400' : ''}>{v?.expiryDate ? new Date(v.expiryDate).toLocaleDateString() : '∞'}</span>
                                                     </div>
                                                 </div>
                                                 <div className="mt-4 flex gap-2 pt-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ borderTop: '1px solid var(--crystal-border)' }}>
-                                                    <button onClick={() => toggleVoucherStatus(v.code)} className={`flex-1 text-[8px] uppercase font-black py-2 rounded-lg border transition-all ${v.isActive ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}`}>{v.isActive ? 'Deactivate' : 'Activate'}</button>
-                                                    <button onClick={() => { if (confirm(`Delete ${v.code}?`)) deleteVoucher(v.code); }} className="px-3 py-2 rounded-lg transition-all crystal-card" style={{ color: 'var(--crystal-muted)' }}><Trash2 className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => v?.code && toggleVoucherStatus(v.code)} className={`flex-1 text-[8px] uppercase font-black py-2 rounded-lg border transition-all ${v?.isActive ? 'border-red-500/30 text-red-400 hover:bg-red-500/10' : 'border-green-500/30 text-green-400 hover:bg-green-500/10'}`}>{v?.isActive ? 'Deactivate' : 'Activate'}</button>
+                                                    <button onClick={() => { if (v?.code && confirm(`Delete ${v.code}?`)) deleteVoucher(v.code); }} className="px-3 py-2 rounded-lg transition-all crystal-card" style={{ color: 'var(--crystal-muted)' }}><Trash2 className="w-3.5 h-3.5" /></button>
                                                 </div>
                                             </div>
                                         ))}
@@ -692,7 +693,7 @@ export default function AdminPanel() {
                                     </div>
 
                                     <div className="space-y-3">
-                                        {categories.map(cat => (
+                                        {(categories || []).map(cat => (
                                             <div key={cat} className="crystal-card crystal-hover group flex items-center justify-between p-4 rounded-xl transition-all">
                                                 <span className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--crystal-text)' }}>{cat}</span>
                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
