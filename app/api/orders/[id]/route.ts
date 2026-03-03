@@ -3,7 +3,10 @@ import prisma from '@/lib/db/prisma';
 
 export const dynamic = 'force-dynamic';
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
         const body = await req.json();
         const { id } = await params;
@@ -11,7 +14,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         const updatedOrder = await prisma.order.update({
             where: { id },
             data: body,
-            include: { items: true }
+            include: {
+                items: true
+            }
         });
 
         return NextResponse.json(updatedOrder);
@@ -21,7 +26,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+    req: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
     try {
         const { id } = await params;
 

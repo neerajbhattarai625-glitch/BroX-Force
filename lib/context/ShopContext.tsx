@@ -175,6 +175,7 @@ const ShopContext = createContext<ShopContextType | undefined>(undefined);
 export function ShopProvider({ children }: { children: ReactNode }) {
     const [products, setProducts] = useState<Product[]>([]);
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
     const [vouchers, setVouchers] = useState<Voucher[]>([]);
     const [theme, setTheme] = useState<ThemeImages>(DEFAULT_THEME);
     const [orders, setOrders] = useState<Order[]>([]);
@@ -198,249 +199,195 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         exchangeRate: 135,
     });
 
-    const save = (key: string, val: any) => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem(`brox_${key}`, JSON.stringify(val));
-        }
-    };
+    const [loading, setLoading] = useState(true);
 
-    // Real visitor tracker
+    // Initial Hydration from Database
     useEffect(() => {
-        // 1. Identify unique visitor
-        const visitorId = localStorage.getItem("brox_visitor_id");
-        let isNewVisitor = false;
-        if (!visitorId) {
-            localStorage.setItem("brox_visitor_id", `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-            isNewVisitor = true;
-        }
-
-        // 2. Track page hit
-        setAnalytics(prev => {
-            const updated = {
-                ...prev,
-                uniqueVisitors: isNewVisitor ? prev.uniqueVisitors + 1 : prev.uniqueVisitors,
-                totalPageHits: prev.totalPageHits + 1
-            };
-            save("analytics", updated);
-            return updated;
-        });
-    }, []);
-
-    // Hydrate from localStorage
-    useEffect(() => {
-        try {
-            const sp = localStorage.getItem("brox_products");
-            const rawProducts = sp ? JSON.parse(sp) : DEFAULT_PRODUCTS;
-            const sanitizedProducts = Array.isArray(rawProducts) ? rawProducts.map((p: any) => ({
-                ...p,
-                sizes: Array.isArray(p.sizes) ? p.sizes : [],
-                colors: Array.isArray(p.colors) ? p.colors : [],
-                stock: typeof p.stock === 'number' ? p.stock : (parseInt(p.stock) || 0),
-                status: p.status || "In Stock",
-                isFeatured: !!p.isFeatured,
-                price: p.price || "0.00",
-                costPrice: p.costPrice || "0.00"
-            })) : DEFAULT_PRODUCTS;
-            setProducts(sanitizedProducts);
-
-            const sv = localStorage.getItem("brox_vouchers");
-            const rawVouchers = sv ? JSON.parse(sv) : [
-                { code: "BROX20", discountPercentage: 20, isUsed: false, usageCount: 0, isActive: true },
-                { code: "LAUNCH10", discountPercentage: 10, isUsed: false, usageCount: 0, isActive: true },
-            ];
-            setVouchers(Array.isArray(rawVouchers) ? rawVouchers.map((v: any) => ({
-                ...v,
-                code: (v.code || "").toUpperCase(),
-                isActive: v.isActive !== false,
-                usageCount: typeof v.usageCount === 'number' ? v.usageCount : 0
-            })) : []);
-
-            const st = localStorage.getItem("brox_theme");
-            if (st) {
-                const parsedTheme = JSON.parse(st);
-                setTheme({ ...DEFAULT_THEME, ...parsedTheme });
-            }
-
-            // Orders are now loaded from the API
-            fetch('/api/orders')
-                .then(async res => {
-                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                    const contentType = res.headers.get("content-type");
-                    if (!contentType || !contentType.includes("application/json")) {
-                        throw new TypeError("Oops, we haven't got JSON!");
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        setOrders(data.map((o: any) => ({
-                            ...o,
-                            id: o.id || `order_${Math.random()}`,
-                            total: o.total || "0.00",
-                            status: o.status || "Pending",
-                            paymentStatus: o.paymentStatus || "Unpaid",
-                            items: Array.isArray(o.items) ? o.items : []
-                        })));
-                    }
-                })
-                .catch(err => console.error("Failed to load orders:", err));
-
-            const sc = localStorage.getItem("brox_customers");
-            if (sc) {
-                try {
-                    const parsedCustomers = JSON.parse(sc);
-                    if (Array.isArray(parsedCustomers)) {
-                        setCustomers(parsedCustomers.map((c: any) => ({
-                            ...c,
-                            name: c.name || "Unknown Customer",
-                            email: c.email || "N/A",
-                            orderHistory: Array.isArray(c.orderHistory) ? c.orderHistory : [],
-                            totalSpent: typeof c.totalSpent === 'number' ? c.totalSpent : (parseFloat(c.totalSpent) || 0)
-                        })));
-                    }
-                } catch (e) {
-                    console.error("Failed to parse customers", e);
-                }
-            }
-
-            const sa = localStorage.getItem("brox_analytics");
-            if (sa) {
-                try {
-                    const parsedAnalytics = JSON.parse(sa);
-                    setAnalytics(prev => ({
-                        ...prev,
-                        ...parsedAnalytics,
-                        uniqueVisitors: Number(parsedAnalytics.uniqueVisitors) || 0,
-                        totalPageHits: Number(parsedAnalytics.totalPageHits) || 0,
-                        revenueNPR: Number(parsedAnalytics.revenueNPR) || 0,
-                        revenueUSD: Number(parsedAnalytics.revenueUSD) || 0,
-                        profitNPR: Number(parsedAnalytics.profitNPR) || 0,
-                        profitUSD: Number(parsedAnalytics.profitUSD) || 0
-                    }));
-                } catch (e) {
-                    console.error("Failed to parse analytics", e);
-                }
-            }
-
-            const cfg = localStorage.getItem("brox_admin_config");
-            if (cfg) {
-                try {
-                    const parsedCfg = JSON.parse(cfg);
-                    setAdminConfig(prev => ({
-                        ...prev,
-                        ...parsedCfg,
-                        payments: { ...prev.payments, ...(parsedCfg.payments || {}) }
-                    }));
-                } catch (e) {
-                    console.error("Failed to parse admin config", e);
-                }
-            }
-        } catch (e) {
-            console.error("Hydration failed", e);
-        }
-    }, []);
-
-    // --- CROSS-TAB SYNCHRONIZATION ---
-    useEffect(() => {
-        const handleStorageChange = (e: StorageEvent) => {
-            if (!e.newValue || !e.key) return;
-
+        const loadInitialData = async () => {
             try {
-                // Determine if this is a key we care about before parsing
-                const relevantKeys = [
-                    "brox_products", "brox_orders", "brox_customers",
-                    "brox_vouchers", "brox_analytics", "brox_categories",
-                    "brox_theme", "brox_admin_config"
-                ];
+                // Load Products
+                const prodRes = await fetch('/api/products');
+                const productsData = await prodRes.json();
+                if (Array.isArray(productsData) && productsData.length > 0) {
+                    setProducts(productsData);
+                } else {
+                    setProducts(DEFAULT_PRODUCTS);
+                }
 
-                if (!relevantKeys.includes(e.key)) return;
+                // Load Categories
+                const catRes = await fetch('/api/categories');
+                const categoriesData = await catRes.json();
+                if (Array.isArray(categoriesData) && categoriesData.length > 0) {
+                    setCategories(categoriesData.map((c: any) => c.name));
+                } else {
+                    setCategories(DEFAULT_CATEGORIES);
+                }
 
-                const val = JSON.parse(e.newValue);
-                if (e.key === "brox_products") setProducts(val);
-                if (e.key === "brox_orders") setOrders(val);
-                if (e.key === "brox_customers") setCustomers(val);
-                if (e.key === "brox_vouchers") setVouchers(val);
-                if (e.key === "brox_analytics") setAnalytics(val);
-                if (e.key === "brox_categories") setCategories(val);
-                if (e.key === "brox_theme") setTheme(val);
-                if (e.key === "brox_admin_config") setAdminConfig(val);
-            } catch (err) {
-                console.error("Storage sync failed", err);
+                // Load Vouchers
+                const vouchRes = await fetch('/api/vouchers');
+                const vouchersData = await vouchRes.json();
+                if (Array.isArray(vouchersData)) {
+                    setVouchers(vouchersData);
+                }
+
+                // Load Theme
+                const themeRes = await fetch('/api/theme');
+                const themeData = await themeRes.json();
+                if (themeData && !themeData.error) {
+                    setTheme(themeData);
+                }
+
+                // Load Admin Config
+                const configRes = await fetch('/api/admin-config');
+                const configData = await configRes.json();
+                if (configData && !configData.error) {
+                    const { id, ...rest } = configData;
+                    setAdminConfig({
+                        ...rest,
+                        payments: {
+                            esewa: configData.esewa,
+                            khalti: configData.khalti,
+                            stripe: configData.stripe,
+                            cod: configData.cod,
+                            paypal: configData.paypal
+                        }
+                    });
+                }
+
+                // Load Customers
+                const custRes = await fetch('/api/customers');
+                const customersData = await custRes.json();
+                if (Array.isArray(customersData)) {
+                    setCustomers(customersData);
+                }
+
+                // Load Orders
+                const ordersRes = await fetch('/api/orders');
+                const ordersData = await ordersRes.json();
+                if (Array.isArray(ordersData)) {
+                    setOrders(ordersData);
+                }
+
+                // Load Analytics
+                const analyticsRes = await fetch('/api/analytics');
+                const analyticsData = await analyticsRes.json();
+                if (analyticsData && !analyticsData.error) {
+                    setAnalytics(analyticsData);
+                }
+
+            } catch (error) {
+                console.error("Failed to hydrate data from DB:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
-        window.addEventListener("storage", handleStorageChange);
-        return () => window.removeEventListener("storage", handleStorageChange);
+        loadInitialData();
     }, []);
 
-
-    const addProduct = useCallback((data: Omit<Product, "id">) => {
-        const p: Product = { ...data, id: `prod_${Date.now()}` };
-        setProducts(prev => {
-            const u = [p, ...prev];
-            save("products", u);
-            return u;
-        });
-    }, []);
-
-    const updateProduct = useCallback((id: string, data: Partial<Product>) => {
-        setProducts(prev => {
-            const u = prev.map(p => p.id === id ? { ...p, ...data } : p);
-            save("products", u);
-            return u;
-        });
-    }, []);
-
-    const deleteProduct = useCallback((id: string) => {
-        setProducts(prev => {
-            const u = prev.filter(p => p.id !== id);
-            save("products", u);
-            return u;
-        });
-    }, []);
-
-    // --- Categories ---
-    const [categories, setCategories] = useState<string[]>([]);
-
+    // Visitor tracking: local ID, but hit tracking on server
     useEffect(() => {
-        const stored = localStorage.getItem("brox_categories");
-        if (stored) {
-            setCategories(JSON.parse(stored));
-        } else {
-            setCategories(DEFAULT_CATEGORIES);
-            localStorage.setItem("brox_categories", JSON.stringify(DEFAULT_CATEGORIES));
+        const trackHit = async () => {
+            const visitorId = localStorage.getItem("brox_visitor_id");
+            let type = 'hit';
+            if (!visitorId) {
+                localStorage.setItem("brox_visitor_id", `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
+                type = 'visitor';
+            }
+
+            try {
+                const res = await fetch('/api/analytics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type })
+                });
+                const updated = await res.json();
+                setAnalytics(updated);
+            } catch (err) {
+                console.error("Failed to track hit:", err);
+            }
+        };
+
+        trackHit();
+    }, []);
+
+    const addProduct = useCallback(async (data: Omit<Product, "id">) => {
+        try {
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const newProd = await res.json();
+            setProducts(prev => [newProd, ...prev]);
+        } catch (error) {
+            console.error("Failed to add product:", error);
         }
     }, []);
 
-    const addCategory = useCallback((name: string) => {
-        setCategories(prev => {
-            if (prev.includes(name)) return prev;
-            const next = [...prev, name];
-            save("categories", next);
-            return next;
-        });
+    const updateProduct = useCallback(async (id: string, data: Partial<Product>) => {
+        try {
+            const res = await fetch(`/api/products/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const updated = await res.json();
+            setProducts(prev => prev.map(p => p.id === id ? updated : p));
+        } catch (error) {
+            console.error("Failed to update product:", error);
+        }
     }, []);
 
-    const updateCategory = useCallback((oldName: string, newName: string) => {
-        setCategories(prev => {
-            const next = prev.map(c => c === oldName ? newName : c);
-            save("categories", next);
-            return next;
-        });
-        // Update product categories too
-        setProducts(prev => {
-            const next = prev.map(p => p.category === oldName ? { ...p, category: newName } : p);
-            save("products", next);
-            return next;
-        });
+    const deleteProduct = useCallback(async (id: string) => {
+        try {
+            await fetch(`/api/products/${id}`, { method: 'DELETE' });
+            setProducts(prev => prev.filter(p => p.id !== id));
+        } catch (error) {
+            console.error("Failed to delete product:", error);
+        }
     }, []);
 
-    const deleteCategory = useCallback((name: string) => {
-        setCategories(prev => {
-            const next = prev.filter(c => c !== name);
-            save("categories", next);
-            return next;
-        });
+    const addCategory = useCallback(async (name: string) => {
+        try {
+            const res = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            const newCat = await res.json();
+            setCategories(prev => [...prev.filter(c => c !== newCat.name), newCat.name]);
+        } catch (error) {
+            console.error("Failed to add category:", error);
+        }
+    }, []);
+
+    const updateCategory = useCallback(async (oldName: string, newName: string) => {
+        try {
+            // Delete old, add new (Prisma upsert/delete approach)
+            await fetch(`/api/categories?name=${encodeURIComponent(oldName)}`, { method: 'DELETE' });
+            await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName })
+            });
+
+            setCategories(prev => prev.map(c => c === oldName ? newName : c));
+
+            // Sync products too
+            setProducts(prev => prev.map(p => p.category === oldName ? { ...p, category: newName } : p));
+        } catch (error) {
+            console.error("Failed to update category:", error);
+        }
+    }, []);
+
+    const deleteCategory = useCallback(async (name: string) => {
+        try {
+            await fetch(`/api/categories?name=${encodeURIComponent(name)}`, { method: 'DELETE' });
+            setCategories(prev => prev.filter(c => c !== name));
+        } catch (error) {
+            console.error("Failed to delete category:", error);
+        }
     }, []);
 
     const addToCart = useCallback((product: Product, size?: string, color?: string, customSize?: string) => {
@@ -462,29 +409,48 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     const cartCount = cartItems.reduce((s, i) => s + i.quantity, 0);
     const cartSubtotal = cartItems.reduce((s, i) => s + parseFloat(i.product.price) * i.quantity, 0);
 
-    const addVoucher = useCallback((code: string, pct: number, expiry?: string, limit?: number) => {
-        setVouchers(prev => {
-            const u = [...prev, { code: code.toUpperCase(), discountPercentage: pct, isUsed: false, isActive: true, expiryDate: expiry, usageLimit: limit, usageCount: 0 }];
-            save("vouchers", u);
-            return u;
-        });
+    const addVoucher = useCallback(async (code: string, pct: number, expiry?: string, limit?: number) => {
+        try {
+            const res = await fetch('/api/vouchers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, discountPercentage: pct, expiryDate: expiry, usageLimit: limit })
+            });
+            const newVoucher = await res.json();
+            setVouchers(prev => [newVoucher, ...prev]);
+        } catch (error) {
+            console.error("Failed to add voucher:", error);
+        }
     }, []);
 
-    const toggleVoucherStatus = useCallback((code: string) => {
-        setVouchers(prev => {
-            const u = prev.map(v => v.code === code.toUpperCase() ? { ...v, isActive: !v.isActive } : v);
-            save("vouchers", u);
-            return u;
-        });
-    }, []);
+    const toggleVoucherStatus = useCallback(async (code: string) => {
+        const v = vouchers.find(x => x.code === code);
+        if (!v) return;
+        try {
+            const id = (v as any).id; // Use ID if available
+            const res = await fetch(`/api/vouchers/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isActive: !v.isActive })
+            });
+            const updated = await res.json();
+            setVouchers(prev => prev.map(x => x.code === code ? updated : x));
+        } catch (error) {
+            console.error("Failed to toggle voucher:", error);
+        }
+    }, [vouchers]);
 
-    const deleteVoucher = useCallback((code: string) => {
-        setVouchers(prev => {
-            const u = prev.filter(v => v.code !== code.toUpperCase());
-            save("vouchers", u);
-            return u;
-        });
-    }, []);
+    const deleteVoucher = useCallback(async (code: string) => {
+        const v = vouchers.find(x => x.code === code);
+        if (!v) return;
+        try {
+            const id = (v as any).id;
+            await fetch(`/api/vouchers/${id}`, { method: 'DELETE' });
+            setVouchers(prev => prev.filter(x => x.code !== code));
+        } catch (error) {
+            console.error("Failed to delete voucher:", error);
+        }
+    }, [vouchers]);
 
     const applyVoucher = useCallback((code: string) => {
         const upper = code.toUpperCase().trim();
@@ -494,11 +460,19 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         if (v.isUsed || (v.usageLimit && v.usageCount >= v.usageLimit)) return { success: false, discount: 0, message: "Voucher no longer valid." };
         if (v.expiryDate && new Date(v.expiryDate) < new Date()) return { success: false, discount: 0, message: "Voucher expired." };
 
-        setVouchers(prev => {
-            const u = prev.map(x => x.code === upper ? { ...x, usageCount: x.usageCount + 1, isUsed: x.usageLimit ? (x.usageCount + 1 >= x.usageLimit) : false } : x);
-            save("vouchers", u);
-            return u;
+        // Increment usage count in DB
+        const id = (v as any).id;
+        fetch(`/api/vouchers/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                usageCount: v.usageCount + 1,
+                isUsed: v.usageLimit ? (v.usageCount + 1 >= v.usageLimit) : false
+            })
+        }).then(res => res.json()).then(updated => {
+            setVouchers(prev => prev.map(x => x.code === upper ? updated : x));
         });
+
         return { success: true, discount: v.discountPercentage, message: `${v.discountPercentage}% discount applied!` };
     }, [vouchers]);
 
@@ -517,25 +491,28 @@ export function ShopProvider({ children }: { children: ReactNode }) {
 
             setOrders(prev => [newOrder, ...prev]);
 
-            // Analytics logic moved to updateOrderStatus (only when marked as Shipped)
-
-            // Updating customers can still be local for now or eventually moved to API
-            setCustomers(prev => {
-                const ex = prev.find(c => c.email === newOrder.customerEmail);
-                let u;
-                if (ex) {
-                    u = prev.map(c => c.email === newOrder.customerEmail ? { ...c, totalSpent: c.totalSpent + parseFloat(newOrder.total), orderHistory: [newOrder.id, ...c.orderHistory] } : c);
-                } else {
-                    u = [{ id: `cust_${Date.now()}`, name: newOrder.customerName, email: newOrder.customerEmail, phone: newOrder.customerPhone, address: newOrder.customerLocation, orderHistory: [newOrder.id], totalSpent: parseFloat(newOrder.total), isBlocked: false }, ...prev];
-                }
-                save("customers", u);
-                return u;
+            // Sync Customer to DB
+            await fetch("/api/customers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: newOrder.customerName,
+                    email: newOrder.customerEmail,
+                    phone: newOrder.customerPhone,
+                    address: newOrder.customerLocation,
+                    totalSpent: newOrder.total
+                })
             });
+
+            // Reload customers
+            const custRes = await fetch('/api/customers');
+            const custData = await custRes.json();
+            if (Array.isArray(custData)) setCustomers(custData);
 
         } catch (error) {
             console.error("Failed to add order to db", error);
         }
-    }, [adminConfig.exchangeRate]);
+    }, []);
 
     const updateOrderStatus = useCallback(async (id: string, newStatus: OrderStatus) => {
         const order = orders.find(o => o.id === id);
@@ -559,43 +536,42 @@ export function ShopProvider({ children }: { children: ReactNode }) {
             });
 
             if (res.ok) {
-                setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus, isStockReduced: newIsStockReduced } : o));
+                const refreshedOrder = await res.json();
+                setOrders(prev => prev.map(o => o.id === id ? refreshedOrder : o));
 
                 if (order.appliedVoucher && (newStatus === "Shipped" || newStatus === "Delivered")) {
-                    setVouchers(vv => {
-                        const next = vv.map(v => v.code === order.appliedVoucher ? { ...v, isActive: false } : v);
-                        save("vouchers", next);
-                        return next;
-                    });
+                    const v = vouchers.find(x => x.code === order.appliedVoucher);
+                    if (v) {
+                        const vid = (v as any).id;
+                        await fetch(`/api/vouchers/${vid}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ isActive: false })
+                        });
+                        // Reload vouchers
+                        const vRes = await fetch('/api/vouchers');
+                        const vData = await vRes.json();
+                        if (Array.isArray(vData)) setVouchers(vData);
+                    }
                 }
 
-                // --- Stock Management ---
+                // If stock needs updating, do it via product API
                 if (!oldIsStockReduced && newIsStockReduced) {
-                    setProducts(currentProducts => {
-                        const updatedProducts = currentProducts.map(p => {
-                            const item = order.items.find(i => i.title === p.title);
-                            if (item) {
-                                const newStock = Math.max(0, p.stock - item.quantity);
-                                return { ...p, stock: newStock, status: newStock === 0 ? "Out of Stock" : p.status } as Product;
-                            }
-                            return p;
-                        });
-                        save("products", updatedProducts);
-                        return updatedProducts;
-                    });
+                    for (const item of order.items) {
+                        const p = products.find(prod => prod.title === item.title);
+                        if (p) {
+                            const newStock = Math.max(0, p.stock - item.quantity);
+                            await updateProduct(p.id, { stock: newStock, status: newStock === 0 ? "Out of Stock" : p.status });
+                        }
+                    }
                 } else if (oldIsStockReduced && !newIsStockReduced) {
-                    setProducts(currentProducts => {
-                        const updatedProducts = currentProducts.map(p => {
-                            const item = order.items.find(i => i.title === p.title);
-                            if (item) {
-                                const newStock = p.stock + item.quantity;
-                                return { ...p, stock: newStock, status: newStock > 0 ? "In Stock" : p.status } as Product;
-                            }
-                            return p;
-                        });
-                        save("products", updatedProducts);
-                        return updatedProducts;
-                    });
+                    for (const item of order.items) {
+                        const p = products.find(prod => prod.title === item.title);
+                        if (p) {
+                            const newStock = p.stock + item.quantity;
+                            await updateProduct(p.id, { stock: newStock, status: newStock > 0 ? "In Stock" : p.status });
+                        }
+                    }
                 }
 
                 // --- Revenue & Profit Management ---
@@ -603,63 +579,73 @@ export function ShopProvider({ children }: { children: ReactNode }) {
                 const isRevenueCounted = newStatus === "Shipped" || newStatus === "Delivered";
 
                 if (!wasRevenueCounted && isRevenueCounted) {
-                    setAnalytics(prev => {
-                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : (parseFloat(order.total) * adminConfig.exchangeRate);
-                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : (parseFloat(order.total) / adminConfig.exchangeRate);
+                    const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : (parseFloat(order.total) * adminConfig.exchangeRate);
+                    const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : (parseFloat(order.total) / adminConfig.exchangeRate);
 
-                        // Calculate Profit
-                        let totalCostNPR = 0;
-                        order.items.forEach(item => {
-                            const p = products.find(prod => prod.title === item.title);
-                            const costNPR = p ? (parseFloat(p.costPrice) * (order.paymentCurrency === "USD" ? adminConfig.exchangeRate : 1)) : 0;
-                            totalCostNPR += costNPR * item.quantity;
-                        });
-
-                        const profitNPR = revNPR - totalCostNPR;
-                        const profitUSD = revUSD - (totalCostNPR / adminConfig.exchangeRate);
-
-                        const updated = {
-                            ...prev,
-                            revenueNPR: prev.revenueNPR + revNPR,
-                            revenueUSD: prev.revenueUSD + revUSD,
-                            profitNPR: prev.profitNPR + profitNPR,
-                            profitUSD: prev.profitUSD + profitUSD
-                        };
-                        save("analytics", updated);
-                        return updated;
+                    // Calculate Profit
+                    let totalCostNPR = 0;
+                    order.items.forEach(item => {
+                        const p = products.find(prod => prod.title === item.title);
+                        const costNPR = p ? (parseFloat(p.costPrice) * (order.paymentCurrency === "USD" ? adminConfig.exchangeRate : 1)) : 0;
+                        totalCostNPR += costNPR * item.quantity;
                     });
+
+                    const profitNPR = revNPR - totalCostNPR;
+                    const profitUSD = revUSD - (totalCostNPR / adminConfig.exchangeRate);
+
+                    await fetch('/api/analytics', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'revenue',
+                            npr: revNPR,
+                            usd: revUSD,
+                            pNpr: profitNPR,
+                            pUsd: profitUSD
+                        })
+                    });
+
+                    // Refresh analytics
+                    const aRes = await fetch('/api/analytics');
+                    const aData = await aRes.json();
+                    if (aData && !aData.error) setAnalytics(aData);
                 } else if (wasRevenueCounted && !isRevenueCounted && newStatus === "Cancelled") {
-                    setAnalytics(prev => {
-                        const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : (parseFloat(order.total) * adminConfig.exchangeRate);
-                        const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : (parseFloat(order.total) / adminConfig.exchangeRate);
+                    const revNPR = order.paymentCurrency === "NPR" ? parseFloat(order.total) : (parseFloat(order.total) * adminConfig.exchangeRate);
+                    const revUSD = order.paymentCurrency === "USD" ? parseFloat(order.total) : (parseFloat(order.total) / adminConfig.exchangeRate);
 
-                        // Calculate Profit to deduct
-                        let totalCostNPR = 0;
-                        order.items.forEach(item => {
-                            const p = products.find(prod => prod.title === item.title);
-                            const costNPR = p ? (parseFloat(p.costPrice) * (order.paymentCurrency === "USD" ? adminConfig.exchangeRate : 1)) : 0;
-                            totalCostNPR += costNPR * item.quantity;
-                        });
-
-                        const profitNPR = revNPR - totalCostNPR;
-                        const profitUSD = revUSD - (totalCostNPR / adminConfig.exchangeRate);
-
-                        const updated = {
-                            ...prev,
-                            revenueNPR: Math.max(0, prev.revenueNPR - revNPR),
-                            revenueUSD: Math.max(0, prev.revenueUSD - revUSD),
-                            profitNPR: Math.max(0, prev.profitNPR - profitNPR),
-                            profitUSD: Math.max(0, prev.profitUSD - profitUSD)
-                        };
-                        save("analytics", updated);
-                        return updated;
+                    // Calculate Profit to deduct
+                    let totalCostNPR = 0;
+                    order.items.forEach(item => {
+                        const p = products.find(prod => prod.title === item.title);
+                        const costNPR = p ? (parseFloat(p.costPrice) * (order.paymentCurrency === "USD" ? adminConfig.exchangeRate : 1)) : 0;
+                        totalCostNPR += costNPR * item.quantity;
                     });
+
+                    const profitNPR = revNPR - totalCostNPR;
+                    const profitUSD = revUSD - (totalCostNPR / adminConfig.exchangeRate);
+
+                    await fetch('/api/analytics', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'revenue',
+                            npr: -revNPR,
+                            usd: -revUSD,
+                            pNpr: -profitNPR,
+                            pUsd: -profitUSD
+                        })
+                    });
+
+                    // Refresh analytics
+                    const aRes = await fetch('/api/analytics');
+                    const aData = await aRes.json();
+                    if (aData && !aData.error) setAnalytics(aData);
                 }
             }
         } catch (error) {
             console.error("Failed to update order status", error);
         }
-    }, [orders, adminConfig.exchangeRate]);
+    }, [orders, products, vouchers, updateProduct]);
 
     const updatePaymentStatus = useCallback(async (id: string, status: PaymentStatus) => {
         try {
@@ -669,7 +655,8 @@ export function ShopProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify({ paymentStatus: status })
             });
             if (res.ok) {
-                setOrders(prev => prev.map(o => o.id === id ? { ...o, paymentStatus: status } : o));
+                const updated = await res.json();
+                setOrders(prev => prev.map(o => o.id === id ? updated : o));
             }
         } catch (error) {
             console.error("Failed to update payment status", error);
@@ -687,34 +674,76 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const updateCustomer = useCallback((id: string, data: Partial<Customer>) => {
-        setCustomers(prev => {
-            const u = prev.map(c => c.id === id ? { ...c, ...data } : c);
-            save("customers", u);
-            return u;
-        });
+    const updateCustomer = useCallback(async (id: string, data: Partial<Customer>) => {
+        try {
+            // Simplified: we use POST (upsert) for customers based on email
+            const c = customers.find(x => x.id === id);
+            if (!c) return;
+            const res = await fetch("/api/customers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...c, ...data })
+            });
+            const updated = await res.json();
+            setCustomers(prev => prev.map(x => x.id === id ? updated : x));
+        } catch (error) {
+            console.error("Failed to update customer:", error);
+        }
+    }, [customers]);
+
+    const updateAdminConfig = useCallback(async (data: Partial<AdminConfig>) => {
+        try {
+            const res = await fetch('/api/admin-config', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const updated = await res.json();
+            const { id, ...rest } = updated;
+            setAdminConfig({
+                ...rest,
+                payments: {
+                    esewa: updated.esewa,
+                    khalti: updated.khalti,
+                    stripe: updated.stripe,
+                    cod: updated.cod,
+                    paypal: updated.paypal
+                }
+            });
+        } catch (error) {
+            console.error("Failed to update admin config:", error);
+        }
     }, []);
 
-    const updateAdminConfig = useCallback((data: Partial<AdminConfig>) => {
-        setAdminConfig(prev => {
-            const u = { ...prev, ...data };
-            save("admin_config", u);
-            return u;
-        });
+    const setThemeImage = useCallback(async (section: keyof ThemeImages, url: string) => {
+        try {
+            const res = await fetch('/api/theme', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [section]: url })
+            });
+            const updated = await res.json();
+            setTheme(updated);
+        } catch (error) {
+            console.error("Failed to update theme:", error);
+        }
     }, []);
 
-    const setThemeImage = useCallback((section: keyof ThemeImages, url: string) => {
-        setTheme(prev => {
-            const next = { ...prev, [section]: url };
-            save("theme", next);
-            return next;
-        });
+    const resetTheme = useCallback(async () => {
+        try {
+            const res = await fetch('/api/theme', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(DEFAULT_THEME)
+            });
+            const updated = await res.json();
+            setTheme(updated);
+        } catch (error) {
+            console.error("Failed to reset theme:", error);
+        }
     }, []);
 
-    const resetTheme = useCallback(() => {
-        setTheme(DEFAULT_THEME);
-        save("theme", DEFAULT_THEME);
-    }, []);
+    if (loading) return null; // Or a loading spinner
 
     return (
         <ShopContext.Provider value={{

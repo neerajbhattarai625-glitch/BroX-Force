@@ -119,11 +119,15 @@ model Analytics {
   totalPageHits  Int      @default(0)
   revenueNPR     Float    @default(0)
   revenueUSD     Float    @default(0)
+  profitNPR      Float    @default(0)
+  profitUSD      Float    @default(0)
 }
 
 model AdminConfig {
   id                    Int     @id @default(1)
   email                 String  @default("codevengers8848@gmail.com")
+  orderEmail            String  @default("codevengers8848@gmail.com")
+  contactEmail          String  @default("codevengers8848@gmail.com")
   passwordHash          String  @default("brox@admin2024")
   esewa                 Boolean @default(true)
   khalti                Boolean @default(true)
